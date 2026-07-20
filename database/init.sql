@@ -28,10 +28,25 @@ INSERT INTO tickets (title, sport_type, organizer, venue_name, city, match_date,
 ('Nature vs Naft Abadan', 'basketball', 'Basketball Federation', 'Azadi Hall', 'Tehran', '2026-08-30 15:00:00', 60000.00, 80),
 ('Malavan vs Nassaji', 'football', 'Pro League', 'Sirous Ghayeghran Stadium', 'Anzali', '2026-09-02 17:30:00', 50000.00, 250);
 
--- 3. Insert Specific Sport Details (3NF)
-INSERT INTO football_details VALUES (1, 'Persian Gulf Pro League', 'Main Stand', 5, 12, true, true);
-INSERT INTO volleyball_details VALUES (3, 'Asian Nations League', '12k Hall', true, 'A1', 3, 14);
-INSERT INTO basketball_details VALUES (5, 'Super League', 'Imam Khomeini Hall', true, 'C1', 2, 4);
+-- 3. Insert Specific Sport Details (3NF) - COMPLETED FOR ALL 10 TICKETS
+-- Football Tickets: 1, 2, 7, 10
+INSERT INTO football_details VALUES 
+(1, 'Persian Gulf Pro League', 'Main Stand', 5, 12, true, true),
+(2, 'Persian Gulf Pro League', 'South Stand', 10, 45, false, false),
+(7, 'Persian Gulf Pro League', 'VIP Lounge', 2, 5, true, true),
+(10, 'Persian Gulf Pro League', 'North Stand', 8, 20, false, false);
+
+-- Volleyball Tickets: 3, 4, 8
+INSERT INTO volleyball_details VALUES 
+(3, 'Asian Nations League', '12k Hall', true, 'A1', 3, 14),
+(4, 'Premier League', 'Federation Hall', true, 'B2', 6, 8),
+(8, 'World Cup', '12k Hall', true, 'VIP', 1, 2);
+
+-- Basketball Tickets: 5, 6, 9
+INSERT INTO basketball_details VALUES 
+(5, 'Super League', 'Imam Khomeini Hall', true, 'C1', 2, 4),
+(6, 'Super League', 'Azadi Hall', false, 'A2', 5, 10),
+(9, 'Super League', 'Azadi Hall', false, 'B1', 4, 12);
 
 -- 4. Insert Sample Reservations
 INSERT INTO reservations (user_id, ticket_id, status, reserved_at, expires_at) VALUES
