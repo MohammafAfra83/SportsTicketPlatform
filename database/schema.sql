@@ -117,3 +117,8 @@ CREATE TABLE reports (
 CREATE INDEX idx_tickets_sport_city ON tickets(sport_type, city);
 CREATE INDEX idx_tickets_match_date ON tickets(match_date ASC);
 CREATE INDEX idx_reservations_user_status ON reservations(user_id, status);
+
+-- ⭐⭐ بخش امتیازی ویژه: ایندکس GIN و Trigram برای سرچ‌های متنی (ILIKE) روی نام ورزشگاه و تایتل
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX idx_tickets_venue_trgm ON tickets USING GIN (venue_name gin_trgm_ops);
+CREATE INDEX idx_tickets_title_trgm ON tickets USING GIN (title gin_trgm_ops);

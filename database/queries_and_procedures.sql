@@ -160,7 +160,9 @@ WHERE status = 'cancelled';
 -- 21. Discount ticket prices by 10% for unsold tickets at Azadi Stadium on match days
 UPDATE tickets 
 SET price = price * 0.90 
-WHERE venue_name ILIKE '%Azadi%' AND remaining_capacity > 0;
+WHERE venue_name ILIKE '%Azadi%' 
+  AND remaining_capacity > 0
+  AND DATE(match_date) = CURRENT_DATE;
 
 -- 22. Report category and count for the reservation with the highest number of complaints
 SELECT category, COUNT(report_id) AS report_count 
