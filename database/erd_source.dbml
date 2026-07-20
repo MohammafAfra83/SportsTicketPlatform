@@ -1,0 +1,111 @@
+// ==========================================
+// DBML Source Script - Sports Ticket Platform
+// ==========================================
+
+Enum user_role {
+  audience
+  support
+}
+
+Enum reservation_status {
+  pending
+  paid
+  cancelled
+}
+
+Enum payment_status {
+  successful
+  failed
+  pending
+}
+
+Enum sport_type_enum {
+  football
+  volleyball
+  basketball
+}
+
+Table users {
+  user_id integer [pk, increment]
+  full_name varchar(100) [not null]
+  phone_number varchar(15) [unique, not null]
+  email varchar(100) [unique, not null]
+  password_hash varchar(255) [not null]
+  role user_role [default: 'audience']
+  city varchar(50) [not null]
+  is_active boolean [default: true]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table tickets {
+  ticket_id integer [pk, increment]
+  title varchar(150) [not null]
+  sport_type sport_type_enum [not null]
+  organizer varchar(100) [not null]
+  venue_name varchar(100) [not null]
+  city varchar(50) [not null]
+  match_date timestamp [not null]
+  price numeric(10, 2) [not null, note: 'Check price >= 0']
+  remaining_capacity integer [not null, note: 'Check remaining_capacity >= 0']
+  is_active boolean [default: true]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table football_details {
+  ticket_id integer [pk, ref: - tickets.ticket_id]
+  league_name varchar(100) [not null]
+  stand_section varchar(50) [not null]
+  row_number integer [not null]
+  seat_number integer [not null]
+  is_vip boolean [default: false]
+  parking_access boolean [default: false]
+}
+
+Table volleyball_details {
+  ticket_id integer [pk, ref: - tickets.ticket_id]
+  tournament_name varchar(100) [not null]
+  hall_name varchar(100) [not null]
+  is_indoor boolean [default: true]
+  seat_section varchar(50) [not null]
+  row_number integer [not null]
+  seat_number integer [not null]
+}
+
+Table basketball_details {
+  ticket_id integer [pk, ref: - tickets.ticket_id]
+  league_name varchar(100) [not null]
+  hall_name varchar(100) [not null]
+  court_side_access boolean [default: false]
+  seat_section varchar(50) [not null]
+  row_number integer [not null]
+  seat_number integer [not null]
+}
+
+Table reservations {
+  reservation_id integer [pk, increment]
+  user_id integer [not null, ref: > users.user_id]
+  ticket_id integer [not null, ref: > tickets.ticket_id]
+  status reservation_status [default: 'pending']
+  reserved_at timestamp [default: `CURRENT_TIMESTAMP`]
+  expires_at timestamp [not null, note: 'Check reserved_at < expires_at']
+}
+
+Table payments {
+  payment_id integer [pk, increment]
+  reservation_id integer [unique, not null, ref: - reservations.reservation_id]
+  user_id integer [not null, ref: > users.user_id]
+  amount numeric(10, 2) [not null, note: 'Check amount >= 0']
+  status payment_status [default: 'pending']
+  payment_method varchar(50) [default: 'online_gateway']
+  paid_at timestamp
+}
+
+Table reports {
+  report_id integer [pk, increment]
+  user_id integer [not null, ref: > users.user_id]
+  reservation_id integer [ref: > reservations.reservation_id]
+  category varchar(100) [not null]
+  report_text text [not null]
+  status varchar(50) [default: 'under_review']
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
