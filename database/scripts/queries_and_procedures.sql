@@ -129,12 +129,17 @@ GROUP BY t.ticket_id
 ORDER BY sold_count DESC 
 OFFSET 1 LIMIT 1;
 
--- 17. Support agent with highest number of cancellations and their percentage
-SELECT u.full_name, COUNT(r.reservation_id) AS cancel_count, 
-       (COUNT(r.reservation_id) * 100.0 / NULLIF((SELECT COUNT(*) FROM reservations WHERE status = 'cancelled'), 0)) AS cancel_percentage 
+-- 17. User with highest number of cancellations and their percentage of total cancellations
+SELECT 
+    u.full_name, 
+    COUNT(r.reservation_id) AS cancel_count, 
+    ROUND(
+        (COUNT(r.reservation_id) * 100.0 / NULLIF((SELECT COUNT(*) FROM reservations WHERE status = 'cancelled'), 0)), 
+        2
+    ) AS cancel_percentage 
 FROM users u 
 JOIN reservations r ON u.user_id = r.user_id 
-WHERE u.role = 'support' AND r.status = 'cancelled' 
+WHERE r.status = 'cancelled' 
 GROUP BY u.user_id, u.full_name 
 ORDER BY cancel_count DESC 
 LIMIT 1;
@@ -199,16 +204,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 2. Get list of cancelled reservations handled by a specific support contact
-CREATE OR REPLACE FUNCTION get_cancelled_reservations_by_support(p_contact VARCHAR)
-RETURNS TABLE(reservation_id INT, user_id INT, ticket_id INT) AS $$
+-- 2. Get list of cancelled reservations for a specific user by phone number or email
+CREATE OR REPLACE FUNCTION get_cancelled_reservations_by_user(p_contact VARCHAR)
+RETURNS TABLE(reservation_id INT, ticket_title VARCHAR, reserved_at TIMESTAMP) AS $$
 BEGIN
     RETURN QUERY
-    SELECT r.reservation_id, r.user_id, r.ticket_id
+    SELECT 
+        r.reservation_id, 
+        t.title AS ticket_title, 
+        r.reserved_at
     FROM reservations r
     JOIN users u ON r.user_id = u.user_id
+    JOIN tickets t ON r.ticket_id = t.ticket_id
     WHERE (u.phone_number = p_contact OR u.email = p_contact) 
-      AND u.role = 'support' 
       AND r.status = 'cancelled';
 END;
 $$ LANGUAGE plpgsql;
