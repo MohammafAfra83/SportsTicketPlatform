@@ -1,0 +1,41 @@
+name: Phase 1 CI - Schema Verification
+
+on:
+  push:
+    branches: [phase1-erd-design, main]
+  pull_request:
+    branches: [phase1-erd-design, main]
+
+jobs:
+  verify-database-schema:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: sports_ticket_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Test DDL Execution (schema.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/schema.sql
