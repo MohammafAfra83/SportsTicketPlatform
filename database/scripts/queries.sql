@@ -149,23 +149,7 @@ GROUP BY u.user_id, u.full_name
 ORDER BY COUNT(rep.report_id) DESC 
 LIMIT 1;
 
--- 19. Delete all cancelled reservations belonging to rejected users
-DELETE FROM reservations 
-WHERE status = 'cancelled' 
-  AND user_id IN (SELECT user_id FROM reports WHERE status = 'rejected');
-
--- 20. Clear all cancelled reservations in the system
-DELETE FROM reservations 
-WHERE status = 'cancelled';
-
--- 21. Discount ticket prices by 10% for unsold tickets at Azadi Stadium on match days
-UPDATE tickets 
-SET price = price * 0.90 
-WHERE venue_name ILIKE '%Azadi%' 
-  AND remaining_capacity > 0 
-  AND DATE(match_date) = CURRENT_DATE;
-
--- 22. Report category and count for the reservation with the highest number of complaints
+-- 19. Report category and count for the reservation with the highest number of complaints
 SELECT category, COUNT(report_id) AS report_count 
 FROM reports 
 WHERE reservation_id = (
@@ -177,7 +161,23 @@ WHERE reservation_id = (
 ) 
 GROUP BY category;
 
--- 23. Optimized query for upcoming match lookups leveraging B-Tree index
+-- 20. Optimized query for upcoming match lookups leveraging B-Tree index
 SELECT * FROM tickets 
 WHERE sport_type = 'football' AND city = 'Tehran' AND match_date >= CURRENT_TIMESTAMP 
 ORDER BY match_date ASC;
+
+-- 21. Discount ticket prices by 10% for unsold tickets at Azadi Stadium on match days (UPDATE DML)
+UPDATE tickets 
+SET price = price * 0.90 
+WHERE venue_name ILIKE '%Azadi%' 
+  AND remaining_capacity > 0 
+  AND DATE(match_date) = CURRENT_DATE;
+
+-- 22. Delete all cancelled reservations belonging to rejected users (DELETE DML)
+DELETE FROM reservations 
+WHERE status = 'cancelled' 
+  AND user_id IN (SELECT user_id FROM reports WHERE status = 'rejected');
+
+-- 23. Clear all cancelled reservations in the system (DELETE DML)
+DELETE FROM reservations 
+WHERE status = 'cancelled';
