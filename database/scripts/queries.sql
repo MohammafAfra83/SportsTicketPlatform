@@ -2,7 +2,12 @@
 -- Database Project: Analytical SQL Queries
 -- File: database/scripts/queries.sql
 -- Database Engine: PostgreSQL
+-- Note: Destructive queries (UPDATE/DELETE) are strictly moved to the end!
 -- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- PART 1: ANALYTICAL & INFORMATION QUERIES (SELECT) - Safe to run
+-- -----------------------------------------------------------------------------
 
 -- 1. Full name of users who have never reserved any ticket
 SELECT full_name 
@@ -140,16 +145,7 @@ GROUP BY u.user_id, u.full_name
 ORDER BY cancel_count DESC 
 LIMIT 1;
 
--- 18. Surname/Full name of user with the highest rejected cancellation requests
-SELECT u.full_name 
-FROM users u 
-JOIN reports rep ON u.user_id = rep.user_id 
-WHERE rep.status = 'rejected' 
-GROUP BY u.user_id, u.full_name 
-ORDER BY COUNT(rep.report_id) DESC 
-LIMIT 1;
-
--- 19. Report category and count for the reservation with the highest number of complaints
+-- 22. Report category and count for the reservation with the highest number of reports
 SELECT category, COUNT(report_id) AS report_count 
 FROM reports 
 WHERE reservation_id = (
@@ -161,23 +157,46 @@ WHERE reservation_id = (
 ) 
 GROUP BY category;
 
--- 20. Optimized query for upcoming match lookups leveraging B-Tree index
+-- BONUS. Optimized query for upcoming match lookups leveraging B-Tree index
 SELECT * FROM tickets 
 WHERE sport_type = 'football' AND city = 'Tehran' AND match_date >= CURRENT_TIMESTAMP 
 ORDER BY match_date ASC;
 
--- 21. Discount ticket prices by 10% for unsold tickets at Azadi Stadium on match days (UPDATE DML)
+
+-- -----------------------------------------------------------------------------
+-- PART 2: DESTRUCTIVE QUERIES (UPDATE / DELETE) - Executed at the very end
+-- -----------------------------------------------------------------------------
+
+-- 21. Discount ticket prices by 10% for tickets sold yesterday for matches at Azadi Stadium
 UPDATE tickets 
 SET price = price * 0.90 
-WHERE venue_name ILIKE '%Azadi%' 
-  AND remaining_capacity > 0 
-  AND DATE(match_date) = CURRENT_DATE;
+WHERE ticket_id IN (
+    SELECT t.ticket_id 
+    FROM tickets t
+    JOIN reservations r ON t.ticket_id = r.ticket_id
+    WHERE t.venue_name ILIKE '%Azadi%' 
+      AND DATE(r.reserved_at) = CURRENT_DATE - INTERVAL '1 day'
+);
 
--- 22. Delete all cancelled reservations belonging to rejected users (DELETE DML)
+-- 18. Change the surname of the user with the highest number of cancelled tickets to "Reddington"
+UPDATE users 
+SET full_name = 'Reddington' 
+WHERE user_id = (
+    SELECT user_id 
+    FROM reservations 
+    WHERE status = 'cancelled' 
+    GROUP BY user_id 
+    ORDER BY COUNT(reservation_id) DESC 
+    LIMIT 1
+);
+
+-- 19. Delete all cancelled reservations belonging to user "Reddington"
 DELETE FROM reservations 
 WHERE status = 'cancelled' 
-  AND user_id IN (SELECT user_id FROM reports WHERE status = 'rejected');
+  AND user_id = (
+      SELECT user_id FROM users WHERE full_name = 'Reddington' LIMIT 1
+  );
 
--- 23. Clear all cancelled reservations in the system (DELETE DML)
+-- 20. Clear all remaining cancelled reservations in the system
 DELETE FROM reservations 
 WHERE status = 'cancelled';
