@@ -1,13 +1,13 @@
-name: Phase 1 CI - Schema Verification
+name: Continuous Integration - Full Suite Test
 
 on:
   push:
-    branches: [phase1-erd-design, main]
+    branches: [phase2-database-implementation, main]
   pull_request:
-    branches: [phase1-erd-design, main]
+    branches: [phase2-database-implementation, main]
 
 jobs:
-  verify-database-schema:
+  verify-database-suite:
     runs-on: ubuntu-latest
 
     services:
@@ -34,8 +34,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Test DDL Execution (schema.sql)
+      - name: 1. Test DDL Execution (schema.sql)
         env:
           PGPASSWORD: postgrespassword
         run: |
           psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/schema.sql
+
+      - name: 2. Test Seed Data Insertion (init.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/init.sql
+
+      - name: 3. Test Stored Procedures Creation (procedures.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/procedures.sql
+
+      - name: 4. Test Analytical Queries Execution (queries.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/queries.sql
