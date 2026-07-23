@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Database Project: Seed Data Script (DML) - Iranian Sports Ticket Platform
--- فایل داده‌های اولیه (DML) - سامانه رزرو بلیط مسابقات ورزشی
+-- فایل داده‌های اولیه (DML) - سامانه رزرو بلیط مسابقات ورزشی (نسخه تواریخ پویا)
 -- Database Engine: PostgreSQL (UTF-8 Encoded / پشتیبانی کامل از فارسی و انگلیسی)
 -- =============================================================================
 
@@ -17,18 +17,18 @@ INSERT INTO users (full_name, phone_number, email, password_hash, role, city) VA
 ('امیر باقری (Amir Bagheri)', '09129999999', 'amir@example.com', '$2b$12$eW8...hash9', 'support', 'Tehran'),
 ('مدیر پشتیبانی (Admin Support)', '09120000000', 'admin@example.com', '$2b$12$eW8...hash10', 'support', 'Tehran');
 
--- 2. Insert Sample Tickets (Ticket 1 uses CURRENT_TIMESTAMP to dynamically pass Query 15 & 21)
+-- 2. Insert Sample Tickets (Dynamic timestamps for Match Dates)
 INSERT INTO tickets (title, sport_type, organizer, venue_name, city, match_date, price, remaining_capacity) VALUES
 ('استقلال - پرسپولیس (Esteghlal vs Persepolis)', 'football', 'سازمان لیگ (Pro League)', 'Azadi Stadium / ورزشگاه آزادی', 'Tehran', CURRENT_TIMESTAMP, 150000.00, 500),
-('سپاهان - تراکتور (Sepahan vs Tractor)', 'football', 'سازمان لیگ (Pro League)', 'Naghsh-e Jahan Stadium / ورزشگاه نقش جهان', 'Isfahan', '2026-08-12 17:00:00', 100000.00, 300),
-('ایران - ژاپن (Iran vs Japan)', 'volleyball', 'فدراسیون والیبال (Volleyball Fed)', '12k Azadi Hall / سالن ۱۲ هزار نفری آزادی', 'Tehran', '2026-08-15 20:00:00', 120000.00, 200),
-('پیکان - شهداب (Paykan vs Shahdab)', 'volleyball', 'فدراسیون والیبال (Volleyball Fed)', 'Federation Hall / سالن فدراسیون', 'Tehran', '2026-08-18 16:00:00', 80000.00, 150),
-('شهرداری گرگان - کاله (Gorgan vs Kalleh)', 'basketball', 'فدراسیون بسکتبال (Basketball Fed)', 'Imam Khomeini Hall / سالن امام خمینی', 'Gorgan', '2026-08-20 16:00:00', 90000.00, 100),
-('مهرام - ذوب آهن (Mahram vs Zob Ahan)', 'basketball', 'فدراسیون بسکتبال (Basketball Fed)', 'Azadi Hall / سالن آزادی', 'Tehran', '2026-08-22 18:00:00', 85000.00, 120),
-('فولاد - گل گهر (Foolad vs Gol Gohar)', 'football', 'سازمان لیگ (Pro League)', 'Foolad Arena / ورزشگاه فولاد آرنا', 'Ahvaz', '2026-08-25 19:30:00', 70000.00, 400),
-('Iran vs Poland (ایران - لهستان)', 'volleyball', 'فدراسیون والیبال (Volleyball Fed)', '12k Azadi Hall / سالن ۱۲ هزار نفری آزادی', 'Tehran', '2026-08-28 19:00:00', 200000.00, 50),
-('طبیعت - نفت آبادان (Nature vs Naft)', 'basketball', 'فدراسیون بسکتبال (Basketball Fed)', 'Azadi Hall / سالن آزادی', 'Tehran', '2026-08-30 15:00:00', 60000.00, 80),
-('ملوان - نساجی (Malavan vs Nassaji)', 'football', 'سازمان لیگ (Pro League)', 'Sirous Ghayeghran Stadium / ورزشگاه سیروس قایقران', 'Anzali', '2026-09-02 17:30:00', 50000.00, 250);
+('سپاهان - تراکتور (Sepahan vs Tractor)', 'football', 'سازمان لیگ (Pro League)', 'Naghsh-e Jahan Stadium / ورزشگاه نقش جهان', 'Isfahan', CURRENT_TIMESTAMP + INTERVAL '2 days', 100000.00, 300),
+('ایران - ژاپن (Iran vs Japan)', 'volleyball', 'فدراسیون والیبال (Volleyball Fed)', '12k Azadi Hall / سالن ۱۲ هزار نفری آزادی', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '5 days', 120000.00, 200),
+('پیکان - شهداب (Paykan vs Shahdab)', 'volleyball', 'فدراسیون والیبال (Volleyball Fed)', 'Federation Hall / سالن فدراسیون', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '8 days', 80000.00, 150),
+('شهرداری گرگان - کاله (Gorgan vs Kalleh)', 'basketball', 'فدراسیون بسکتبال (Basketball Fed)', 'Imam Khomeini Hall / سالن امام خمینی', 'Gorgan', CURRENT_TIMESTAMP + INTERVAL '10 days', 90000.00, 100),
+('مهرام - ذوب آهن (Mahram vs Zob Ahan)', 'basketball', 'فدراسیون بسکتبال (Basketball Fed)', 'Azadi Hall / سالن آزادی', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '12 days', 85000.00, 120),
+('فولاد - گل گهر (Foolad vs Gol Gohar)', 'football', 'سازمان لیگ (Pro League)', 'Foolad Arena / ورزشگاه فولاد آرنا', 'Ahvaz', CURRENT_TIMESTAMP + INTERVAL '15 days', 70000.00, 400),
+('Iran vs Poland (ایران - لهستان)', 'volleyball', 'فدراسیون والیبال (Volleyball Fed)', '12k Azadi Hall / سالن ۱۲ هزار نفری آزادی', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '18 days', 200000.00, 50),
+('طبیعت - نفت آبادان (Nature vs Naft)', 'basketball', 'فدراسیون بسکتبال (Basketball Fed)', 'Azadi Hall / سالن آزادی', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '20 days', 60000.00, 80),
+('ملوان - نساجی (Malavan vs Nassaji)', 'football', 'سازمان لیگ (Pro League)', 'Sirous Ghayeghran Stadium / ورزشگاه سیروس قایقران', 'Anzali', CURRENT_TIMESTAMP + INTERVAL '25 days', 50000.00, 250);
 
 -- 3. Insert Specific Sport Details (3NF Extensions)
 INSERT INTO football_details VALUES 
@@ -47,23 +47,23 @@ INSERT INTO basketball_details VALUES
 (6, 'سوپر لیگ بسکتبال (Super League)', 'سالن آزادی (Azadi Hall)', false, 'A2', 5, 10),
 (9, 'سوپر لیگ بسکتبال (Super League)', 'سالن آزادی (Azadi Hall)', false, 'B1', 4, 12);
 
--- 4. Insert Sample Reservations
+-- 4. Insert Sample Reservations (Dynamic Timestamps for Relative Queries)
 INSERT INTO reservations (user_id, ticket_id, status, reserved_at, expires_at) VALUES
-(1, 1, 'paid', CURRENT_TIMESTAMP - INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '10 minutes'),
-(1, 3, 'paid', '2026-07-02 12:00:00', '2026-07-02 12:10:00'),
-(1, 5, 'paid', '2026-07-03 14:00:00', '2026-07-03 14:10:00'),
-(2, 3, 'pending', '2026-07-01 11:00:00', '2026-07-01 11:10:00'),
-(3, 2, 'paid', '2026-07-04 15:00:00', '2026-07-04 15:10:00'),
-(4, 8, 'cancelled', '2026-07-05 09:00:00', '2026-07-05 09:10:00'),
-(5, 1, 'cancelled', '2026-07-06 16:00:00', '2026-07-06 16:10:00'),
-(9, 4, 'cancelled', '2026-07-07 18:00:00', '2026-07-07 18:10:00');
+(1, 1, 'paid', CURRENT_TIMESTAMP - INTERVAL '2 hours', CURRENT_TIMESTAMP - INTERVAL '1 hour'),
+(1, 3, 'paid', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days' + INTERVAL '10 minutes'),
+(1, 5, 'paid', CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP - INTERVAL '5 days' + INTERVAL '10 minutes'),
+(2, 3, 'pending', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day' + INTERVAL '10 minutes'),
+(3, 2, 'paid', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP - INTERVAL '10 days' + INTERVAL '10 minutes'),
+(4, 8, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '12 days', CURRENT_TIMESTAMP - INTERVAL '12 days' + INTERVAL '10 minutes'),
+(5, 1, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '15 days', CURRENT_TIMESTAMP - INTERVAL '15 days' + INTERVAL '10 minutes'),
+(9, 4, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '18 days', CURRENT_TIMESTAMP - INTERVAL '18 days' + INTERVAL '10 minutes');
 
--- 5. Insert Sample Payments 
+-- 5. Insert Sample Payments (Dynamic Timestamps matching Reservations)
 INSERT INTO payments (reservation_id, user_id, amount, status, payment_method, paid_at) VALUES
-(1, 1, 150000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP),
-(2, 1, 120000.00, 'successful', 'online_gateway', '2026-07-02 12:05:00'),
-(3, 1, 90000.00, 'successful', 'wallet', '2026-07-03 14:02:00'),
-(5, 3, 100000.00, 'successful', 'online_gateway', '2026-07-04 15:03:00');
+(1, 1, 150000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '2 hours'),
+(2, 1, 120000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+(3, 1, 90000.00, 'successful', 'wallet', CURRENT_TIMESTAMP - INTERVAL '5 days'),
+(5, 3, 100000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '10 days');
 
 -- 6. Insert Sample Reports
 INSERT INTO reports (user_id, reservation_id, category, report_text, status) VALUES
