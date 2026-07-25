@@ -7,7 +7,7 @@ on:
     branches: [phase1-erd-design, main]
 
 jobs:
-  verify-database-schema:
+  verify-database-suite:
     runs-on: ubuntu-latest
 
     services:
@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Test DDL Execution (schema.sql)
+      - name: 1. Test DDL Execution (schema.sql)
         env:
           PGPASSWORD: postgrespassword
         run: |
