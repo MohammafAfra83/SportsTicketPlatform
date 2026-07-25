@@ -1,4 +1,4 @@
-name: Phase 1 CI - Schema Verification
+name: Phase 1 CI - Schema & Database Verification
 
 on:
   push:
@@ -38,4 +38,12 @@ jobs:
         env:
           PGPASSWORD: postgrespassword
         run: |
-          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/schema.sql
+          echo "Executing schema.sql..."
+          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/schema.sql
+
+      - name: Verify Created Tables
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          echo "Checking if tables were successfully created..."
+          psql -h localhost -U postgres -d sports_ticket_db -c "\dt"
