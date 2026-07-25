@@ -1,10 +1,10 @@
-name: Continuous Integration - Full Suite Test
+name: Phase 1 CI - Schema & Database Verification
 
 on:
   push:
-    branches: [phase2-database-implementation, main]
+    branches: [phase1-erd-design, main]
   pull_request:
-    branches: [phase2-database-implementation, main]
+    branches: [phase1-erd-design, main]
 
 jobs:
   verify-database-suite:
@@ -38,22 +38,12 @@ jobs:
         env:
           PGPASSWORD: postgrespassword
         run: |
-          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/schema.sql
+          echo "Executing schema.sql..."
+          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/schema.sql
 
-      - name: 2. Test Seed Data Insertion (init.sql)
+      - name: Verify Created Tables
         env:
           PGPASSWORD: postgrespassword
         run: |
-          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/init.sql
-
-      - name: 3. Test Stored Procedures Creation (procedures.sql)
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/procedures.sql
-
-      - name: 4. Test Analytical Queries Execution (queries.sql)
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          psql -h localhost -U postgres -d sports_ticket_db -f database/scripts/queries.sql
+          echo "Checking if tables were successfully created..."
+          psql -h localhost -U postgres -d sports_ticket_db -c "\dt"

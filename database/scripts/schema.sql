@@ -28,7 +28,8 @@ CREATE TYPE sport_type_enum AS ENUM ('football', 'volleyball', 'basketball');
 -- 1. Users Table
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
     phone_number VARCHAR(15) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -41,8 +42,10 @@ CREATE TABLE users (
 -- 2. Tickets Table
 CREATE TABLE tickets (
     ticket_id SERIAL PRIMARY KEY,
-    title VARCHAR(150) NOT NULL,
+    home_team VARCHAR(100) NOT NULL,
+    away_team VARCHAR(100) NOT NULL,
     sport_type sport_type_enum NOT NULL,
+    ticket_tier VARCHAR(50) NOT NULL,
     organizer VARCHAR(100) NOT NULL,
     venue_name VARCHAR(100) NOT NULL,
     city VARCHAR(50) NOT NULL,
@@ -57,22 +60,24 @@ CREATE TABLE tickets (
 CREATE TABLE football_details (
     ticket_id INT PRIMARY KEY REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     league_name VARCHAR(100) NOT NULL,
+    stadium_name VARCHAR(100) NOT NULL,
     stand_section VARCHAR(50) NOT NULL,
     row_number INT NOT NULL,
     seat_number INT NOT NULL,
-    is_vip BOOLEAN DEFAULT FALSE,
-    parking_access BOOLEAN DEFAULT FALSE
+    ticket_type VARCHAR(50) NOT NULL,
+    amenities TEXT
 );
 
 -- 4. Volleyball Specific Details (3NF)
 CREATE TABLE volleyball_details (
     ticket_id INT PRIMARY KEY REFERENCES tickets(ticket_id) ON DELETE CASCADE,
-    tournament_name VARCHAR(100) NOT NULL,
+    league_name VARCHAR(100) NOT NULL,
     hall_name VARCHAR(100) NOT NULL,
-    is_indoor BOOLEAN DEFAULT TRUE,
     seat_section VARCHAR(50) NOT NULL,
     row_number INT NOT NULL,
-    seat_number INT NOT NULL
+    seat_number INT NOT NULL,
+    ticket_tier VARCHAR(50) NOT NULL,
+    amenities TEXT
 );
 
 -- 5. Basketball Specific Details (3NF)
@@ -80,10 +85,11 @@ CREATE TABLE basketball_details (
     ticket_id INT PRIMARY KEY REFERENCES tickets(ticket_id) ON DELETE CASCADE,
     league_name VARCHAR(100) NOT NULL,
     hall_name VARCHAR(100) NOT NULL,
-    court_side_access BOOLEAN DEFAULT FALSE,
     seat_section VARCHAR(50) NOT NULL,
     row_number INT NOT NULL,
-    seat_number INT NOT NULL
+    seat_number INT NOT NULL,
+    ticket_tier VARCHAR(50) NOT NULL,
+    amenities TEXT
 );
 
 -- 6. Reservations Table
@@ -112,6 +118,7 @@ CREATE TABLE payments (
 CREATE TABLE reports (
     report_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    ticket_id INT REFERENCES tickets(ticket_id) ON DELETE SET NULL,
     reservation_id INT REFERENCES reservations(reservation_id) ON DELETE SET NULL,
     category VARCHAR(100) NOT NULL,
     report_text TEXT NOT NULL,
@@ -124,7 +131,8 @@ CREATE INDEX idx_tickets_sport_city ON tickets(sport_type, city);
 CREATE INDEX idx_tickets_match_date ON tickets(match_date ASC);
 CREATE INDEX idx_reservations_user_status ON reservations(user_id, status);
 
--- GIN & Trigram Indexes for fast wildcard ILIKE text search on venue and title
+-- GIN & Trigram Indexes for fast wildcard ILIKE text search
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX idx_tickets_venue_trgm ON tickets USING GIN (venue_name gin_trgm_ops);
-CREATE INDEX idx_tickets_title_trgm ON tickets USING GIN (title gin_trgm_ops);
+CREATE INDEX idx_tickets_home_team_trgm ON tickets USING GIN (home_team gin_trgm_ops);
+CREATE INDEX idx_tickets_away_team_trgm ON tickets USING GIN (away_team gin_trgm_ops);
