@@ -1,5 +1,5 @@
 // ==========================================
-// DBML Source Script - Sports Ticket Platform
+// DBML Source Script - Sports Ticket Platform (Updated)
 // ==========================================
 
 Enum user_role {
@@ -27,7 +27,8 @@ Enum sport_type_enum {
 
 Table users {
   user_id integer [pk, increment]
-  full_name varchar(100) [not null]
+  first_name varchar(50) [not null]
+  last_name varchar(50) [not null]
   phone_number varchar(15) [unique, not null]
   email varchar(100) [unique, not null]
   password_hash varchar(255) [not null]
@@ -39,8 +40,10 @@ Table users {
 
 Table tickets {
   ticket_id integer [pk, increment]
-  title varchar(150) [not null]
+  home_team varchar(100) [not null]
+  away_team varchar(100) [not null]
   sport_type sport_type_enum [not null]
+  ticket_tier varchar(50) [not null]
   organizer varchar(100) [not null]
   venue_name varchar(100) [not null]
   city varchar(50) [not null]
@@ -54,31 +57,34 @@ Table tickets {
 Table football_details {
   ticket_id integer [pk, ref: - tickets.ticket_id]
   league_name varchar(100) [not null]
+  stadium_name varchar(100) [not null]
   stand_section varchar(50) [not null]
   row_number integer [not null]
   seat_number integer [not null]
-  is_vip boolean [default: false]
-  parking_access boolean [default: false]
+  ticket_type varchar(50) [not null]
+  amenities text
 }
 
 Table volleyball_details {
   ticket_id integer [pk, ref: - tickets.ticket_id]
-  tournament_name varchar(100) [not null]
+  league_name varchar(100) [not null]
   hall_name varchar(100) [not null]
-  is_indoor boolean [default: true]
   seat_section varchar(50) [not null]
   row_number integer [not null]
   seat_number integer [not null]
+  ticket_tier varchar(50) [not null]
+  amenities text
 }
 
 Table basketball_details {
   ticket_id integer [pk, ref: - tickets.ticket_id]
   league_name varchar(100) [not null]
   hall_name varchar(100) [not null]
-  court_side_access boolean [default: false]
   seat_section varchar(50) [not null]
   row_number integer [not null]
   seat_number integer [not null]
+  ticket_tier varchar(50) [not null]
+  amenities text
 }
 
 Table reservations {
@@ -103,7 +109,8 @@ Table payments {
 Table reports {
   report_id integer [pk, increment]
   user_id integer [not null, ref: > users.user_id]
-  reservation_id integer [ref: > reservations.reservation_id]
+  ticket_id integer [ref: > tickets.ticket_id, note: 'Nullable, report can refer to ticket or reservation']
+  reservation_id integer [ref: > reservations.reservation_id, note: 'Nullable, report can refer to ticket or reservation']
   category varchar(100) [not null]
   report_text text [not null]
   status varchar(50) [default: 'under_review']
