@@ -50,8 +50,8 @@ CREATE TABLE tickets (
     venue_name VARCHAR(100) NOT NULL,
     city VARCHAR(50) NOT NULL,
     match_date TIMESTAMP NOT NULL,
-    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0), -- Non-negative price constraint
-    remaining_capacity INT NOT NULL CHECK (remaining_capacity >= 0), -- Non-negative capacity constraint
+    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+    remaining_capacity INT NOT NULL CHECK (remaining_capacity >= 0),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -100,15 +100,15 @@ CREATE TABLE reservations (
     status reservation_status DEFAULT 'pending',
     reserved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
-    cancelled_by_support_id INT REFERENCES users(user_id) ON DELETE SET NULL, -- Track which admin cancelled it
-    CONSTRAINT check_reservation_dates CHECK (reserved_at < expires_at) -- Date integrity check
+    cancelled_by_support_id INT REFERENCES users(user_id) ON DELETE SET NULL,
+    CONSTRAINT check_reservation_dates CHECK (reserved_at < expires_at)
 );
 
--- 7. Financial Transactions & Payments Table
+-- 7. Financial Transactions & Payments Table (Protected with RESTRICT)
 CREATE TABLE payments (
     payment_id SERIAL PRIMARY KEY,
-    reservation_id INT UNIQUE NOT NULL REFERENCES reservations(reservation_id) ON DELETE RESTRICT, -- Protected Financial Data
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT, -- Protected Financial Data
+    reservation_id INT UNIQUE NOT NULL REFERENCES reservations(reservation_id) ON DELETE RESTRICT,
+    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT,
     amount NUMERIC(10, 2) NOT NULL CHECK (amount >= 0),
     status payment_status DEFAULT 'pending',
     payment_method VARCHAR(50) DEFAULT 'online_gateway',
@@ -126,3 +126,18 @@ CREATE TABLE reports (
     status VARCHAR(50) DEFAULT 'under_review',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- =============================================================================
+-- INDEXES FOR PHASE 1 SEARCH OPTIMIZATION
+-- =============================================================================
+
+-- Performance B-Tree Indexes
+CREATE INDEX IF NOT EXISTS idx_tickets_sport_city ON tickets(sport_type, city);
+CREATE INDEX IF NOT EXISTS idx_tickets_match_date ON tickets(match_date ASC);
+CREATE INDEX IF NOT EXISTS idx_reservations_user_status ON reservations(user_id, status);
+
+-- GIN & Trigram Indexes for fast wildcard ILIKE text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_tickets_venue_trgm ON tickets USING GIN (venue_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_tickets_home_team_trgm ON tickets USING GIN (home_team gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_tickets_away_team_trgm ON tickets USING GIN (away_team gin_trgm_ops);
