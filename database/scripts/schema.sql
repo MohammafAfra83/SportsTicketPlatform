@@ -100,14 +100,15 @@ CREATE TABLE reservations (
     status reservation_status DEFAULT 'pending',
     reserved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
+    cancelled_by_support_id INT REFERENCES users(user_id) ON DELETE SET NULL, -- Track which admin cancelled it
     CONSTRAINT check_reservation_dates CHECK (reserved_at < expires_at) -- Date integrity check
 );
 
 -- 7. Financial Transactions & Payments Table
 CREATE TABLE payments (
     payment_id SERIAL PRIMARY KEY,
-    reservation_id INT UNIQUE NOT NULL REFERENCES reservations(reservation_id) ON DELETE CASCADE,
-    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    reservation_id INT UNIQUE NOT NULL REFERENCES reservations(reservation_id) ON DELETE RESTRICT, -- Protected Financial Data
+    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT, -- Protected Financial Data
     amount NUMERIC(10, 2) NOT NULL CHECK (amount >= 0),
     status payment_status DEFAULT 'pending',
     payment_method VARCHAR(50) DEFAULT 'online_gateway',
@@ -125,14 +126,3 @@ CREATE TABLE reports (
     status VARCHAR(50) DEFAULT 'under_review',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Performance B-Tree Indexes
-CREATE INDEX idx_tickets_sport_city ON tickets(sport_type, city);
-CREATE INDEX idx_tickets_match_date ON tickets(match_date ASC);
-CREATE INDEX idx_reservations_user_status ON reservations(user_id, status);
-
--- GIN & Trigram Indexes for fast wildcard ILIKE text search
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX idx_tickets_venue_trgm ON tickets USING GIN (venue_name gin_trgm_ops);
-CREATE INDEX idx_tickets_home_team_trgm ON tickets USING GIN (home_team gin_trgm_ops);
-CREATE INDEX idx_tickets_away_team_trgm ON tickets USING GIN (away_team gin_trgm_ops);
