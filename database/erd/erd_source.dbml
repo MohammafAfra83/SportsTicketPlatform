@@ -94,6 +94,7 @@ Table reservations {
   status reservation_status [default: 'pending']
   reserved_at timestamp [default: `CURRENT_TIMESTAMP`]
   expires_at timestamp [not null, note: 'Check reserved_at < expires_at']
+  cancelled_by_support_id integer [ref: > users.user_id, note: 'Track which admin cancelled it']
 }
 
 Table payments {
