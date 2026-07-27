@@ -185,6 +185,10 @@ ORDER BY match_date ASC;
 -- PART 2: DESTRUCTIVE QUERIES (UPDATE / DELETE) - Executed at the very end
 -- -----------------------------------------------------------------------------
 
+-- -----------------------------------------------------------------------------
+-- PART 2: DESTRUCTIVE QUERIES (UPDATE / DELETE) - Executed at the very end
+-- -----------------------------------------------------------------------------
+
 -- 19. Change the surname of the user with the highest number of cancelled tickets to "Reddington"
 UPDATE users 
 SET last_name = 'Reddington'
@@ -198,6 +202,16 @@ WHERE user_id = (
 );
 
 -- 20. Delete all cancelled reservations belonging to user "Reddington"
+-- First delete linked payments to respect Foreign Key (ON DELETE RESTRICT)
+DELETE FROM payments 
+WHERE reservation_id IN (
+    SELECT r.reservation_id 
+    FROM reservations r
+    JOIN users u ON r.user_id = u.user_id
+    WHERE r.status = 'cancelled' AND u.last_name ILIKE '%Reddington%'
+);
+
+-- Then delete the cancelled reservations
 DELETE FROM reservations 
 WHERE status = 'cancelled' 
   AND user_id IN (
@@ -205,6 +219,13 @@ WHERE status = 'cancelled'
   );
 
 -- 21. Clear all remaining cancelled reservations in the system
+-- First delete all payments associated with cancelled reservations
+DELETE FROM payments 
+WHERE reservation_id IN (
+    SELECT reservation_id FROM reservations WHERE status = 'cancelled'
+);
+
+-- Then delete all remaining cancelled reservations
 DELETE FROM reservations 
 WHERE status = 'cancelled';
 
