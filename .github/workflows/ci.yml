@@ -1,15 +1,14 @@
-name: Phase 1 CI - Schema & Database Verification
+name: Phase 2 CI - Database Implementation & Testing
 
 on:
   push:
-    branches: [phase1-erd-design, main]
+    branches: [phase2-database-implementation, main]
   pull_request:
-    branches: [phase1-erd-design, main]
+    branches: [phase2-database-implementation, main]
 
 jobs:
   verify-database-suite:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:16
@@ -34,16 +33,46 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: 1. Test DDL Execution (schema.sql)
+      - name: 1. Execute DDL (schema.sql)
         env:
           PGPASSWORD: postgrespassword
         run: |
-          echo "Executing schema.sql..."
+          echo "Building tables and types..."
           psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/schema.sql
 
-      - name: Verify Created Tables
+      - name: 2. Execute DML (seed.sql)
         env:
           PGPASSWORD: postgrespassword
         run: |
-          echo "Checking if tables were successfully created..."
+          echo "Inserting mock data..."
+          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/seed.sql
+
+      - name: 3. Create Indexes (indexes.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          echo "Applying performance optimizations (B-Tree & GIN)..."
+          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/indexes.sql
+
+      - name: 4. Compile Procedures (procedures.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          echo "Compiling stored procedures and functions..."
+          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/procedures.sql
+
+      - name: 5. Run Analytical Queries (queries.sql)
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          echo "Executing all 22 Phase-2 queries..."
+          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/queries.sql
+
+      - name: Verify Final Database State
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          echo "Checking tables list..."
           psql -h localhost -U postgres -d sports_ticket_db -c "\dt"
+          echo "Verifying data insertion (Counting Users)..."
+          psql -h localhost -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_users_in_db FROM users;"
