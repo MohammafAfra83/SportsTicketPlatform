@@ -1,4 +1,4 @@
-name: Phase 2 CI - Database Implementation & Testing
+name: Phase 2 CI - Dockerized Database & Query Verification
 
 on:
   push:
@@ -7,72 +7,34 @@ on:
     branches: [phase2-database-implementation, main]
 
 jobs:
-  verify-database-suite:
+  verify-docker-database:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: sports_ticket_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgrespassword
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Make init.sh executable
+        run: chmod +x database/init.sh
 
-      - name: 1. Execute DDL (schema.sql)
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          echo "Building tables and types..."
-          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/schema.sql
+      - name: 1. Start Database via Docker Compose
+        run: docker compose up -d
 
-      - name: 2. Execute DML (seed.sql)
-        env:
-          PGPASSWORD: postgrespassword
+      - name: 2. Wait for Database Initialization to Complete
         run: |
-          echo "Inserting mock data..."
-          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/seed.sql
+          echo "Waiting for Postgres container to run initialization scripts..."
+          sleep 10
 
-      - name: 3. Create Indexes (indexes.sql)
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          echo "Applying performance optimizations (B-Tree & GIN)..."
-          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/indexes.sql
+      - name: 3. Check Container Logs for Errors
+        run: docker logs sports_ticket_postgres
 
-      - name: 4. Compile Procedures (procedures.sql)
-        env:
-          PGPASSWORD: postgrespassword
+      - name: 4. Verify Final Database Integrity
         run: |
-          echo "Compiling stored procedures and functions..."
-          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/procedures.sql
+          echo "Checking table structure and record counts inside Docker..."
+          docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "\dt"
+          docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_users FROM users;"
+          docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_tickets FROM tickets;"
 
-      - name: 5. Run Analytical Queries (queries.sql)
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          echo "Executing all 22 Phase-2 queries..."
-          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/queries.sql
-
-      - name: Verify Final Database State
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          echo "Checking tables list..."
-          psql -h localhost -U postgres -d sports_ticket_db -c "\dt"
-          echo "Verifying data insertion (Counting Users)..."
-          psql -h localhost -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_users_in_db FROM users;"
+      - name: 5. Shutdown Containers
+        if: always()
+        run: docker compose down -v
