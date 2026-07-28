@@ -90,12 +90,13 @@ BEGIN
     JOIN reservations r ON u.user_id = r.user_id
     JOIN tickets t ON r.ticket_id = t.ticket_id
     WHERE u.city = v_user_city AND r.status = 'paid'
-      AND u.phone_number != p_contact AND u.email != p_contact; -- (جلوگیری از نمایش خود فرد)
+      AND u.phone_number != p_contact AND u.email != p_contact;
 END;
 $$ LANGUAGE plpgsql;
 
 -- 6. Get top N buyers who purchased tickets after a specific date
-CREATE OR REPLACE FUNCTION get_top_buyers_after_date(p_date TIMESTAMP, p_limit INT)
+-- FIXED: Changed p_date from TIMESTAMP to TIMESTAMPTZ to support CURRENT_TIMESTAMP without explicit casting
+CREATE OR REPLACE FUNCTION get_top_buyers_after_date(p_date TIMESTAMPTZ, p_limit INT)
 RETURNS TABLE(full_name TEXT, purchase_count BIGINT) AS $$
 BEGIN
     RETURN QUERY
@@ -144,9 +145,6 @@ SELECT * FROM get_user_paid_tickets('ali@example.com');
 SELECT * FROM get_cancelled_reservations_by_support('admin@example.com');
 SELECT * FROM get_tickets_by_city('Tehran');
 SELECT * FROM search_tickets_by_keyword('خلیج فارس');
-SELECT * FROM search_tickets_by_keyword('مریم کاظمی');
-SELECT * FROM get_co_citizens_purchases('09121111111');
 SELECT * FROM get_top_buyers_after_date(CURRENT_TIMESTAMP - INTERVAL '30 days', 3);
 SELECT * FROM get_cancelled_tickets_by_sport('football');
-SELECT * FROM get_users_with_most_reports_by_category('مشکل لغو رزرو (Cancellation Issue)');
 */
