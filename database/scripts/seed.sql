@@ -17,9 +17,8 @@ INSERT INTO users (first_name, last_name, phone_number, email, password_hash, ro
 ('Amir', 'Bagheri (امیر باقری)', '09129999999', 'amir@example.com', '$2b$12$eW8...hash9', 'support', 'Tehran'),
 ('Admin', 'Support (مدیر پشتیبانی)', '09120000000', 'admin@example.com', '$2b$12$eW8...hash10', 'support', 'Tehran');
 
--- 2. Insert Sample Tickets (30 Records: 10 Mixed, 6 Football, 7 Volleyball, 7 Basketball)
+-- 2. Insert Sample Tickets (30 Records)
 INSERT INTO tickets (home_team, away_team, sport_type, ticket_tier, organizer, venue_name, city, match_date, price, remaining_capacity) VALUES
--- 1 to 10 (Original Mixed)
 ('Esteghlal', 'Persepolis', 'football', 'VIP', 'سازمان لیگ', 'Azadi Stadium', 'Tehran', CURRENT_TIMESTAMP, 150000.00, 500),
 ('Sepahan', 'Tractor', 'football', 'Regular', 'سازمان لیگ', 'Naghsh-e Jahan', 'Isfahan', CURRENT_TIMESTAMP + INTERVAL '2 days', 100000.00, 300),
 ('Iran', 'Japan', 'volleyball', 'VVIP', 'فدراسیون والیبال', '12k Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '5 days', 120000.00, 200),
@@ -30,14 +29,12 @@ INSERT INTO tickets (home_team, away_team, sport_type, ticket_tier, organizer, v
 ('Iran', 'Poland', 'volleyball', 'VIP', 'فدراسیون والیبال', '12k Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '18 days', 200000.00, 50),
 ('Nature', 'Naft', 'basketball', 'Regular', 'فدراسیون بسکتبال', 'Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '20 days', 60000.00, 80),
 ('Malavan', 'Nassaji', 'football', 'Regular', 'سازمان لیگ', 'Sirous Ghayeghran', 'Anzali', CURRENT_TIMESTAMP + INTERVAL '25 days', 50000.00, 250),
--- 11 to 16 (Football)
 ('Mes Rafsanjan', 'Esteghlal Khuzestan', 'football', 'Regular', 'سازمان لیگ', 'Shohadaye Mes', 'Rafsanjan', CURRENT_TIMESTAMP + INTERVAL '10 days', 40000.00, 200),
 ('Aluminum Arak', 'Paykan', 'football', 'Regular', 'سازمان لیگ', 'Imam Khomeini', 'Arak', CURRENT_TIMESTAMP + INTERVAL '12 days', 45000.00, 150),
 ('Shams Azar', 'Zob Ahan', 'football', 'Regular', 'سازمان لیگ', 'Sardar Azadegan', 'Qazvin', CURRENT_TIMESTAMP + INTERVAL '14 days', 50000.00, 180),
 ('Sanat Naft', 'Havadar', 'football', 'Regular', 'سازمان لیگ', 'Takhti', 'Abadan', CURRENT_TIMESTAMP + INTERVAL '16 days', 35000.00, 300),
 ('Esteghlal', 'Sepahan', 'football', 'VIP', 'سازمان لیگ', 'Azadi Stadium', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '30 days', 200000.00, 800),
 ('Tractor', 'Persepolis', 'football', 'VIP', 'سازمان لیگ', 'Yadegar-e Emam', 'Tabriz', CURRENT_TIMESTAMP + INTERVAL '35 days', 150000.00, 700),
--- 17 to 23 (Volleyball)
 ('Shahrdari Urmia', 'Giti Pasand', 'volleyball', 'Regular', 'فدراسیون والیبال', 'Ghadir Hall', 'Urmia', CURRENT_TIMESTAMP + INTERVAL '20 days', 60000.00, 100),
 ('Eefa Ceram', 'Nian Electronic', 'volleyball', 'Regular', 'فدراسیون والیبال', 'Ardakan Hall', 'Yazd', CURRENT_TIMESTAMP + INTERVAL '22 days', 55000.00, 120),
 ('Pas Gorgan', 'Hoorasan', 'volleyball', 'Regular', 'فدراسیون والیبال', 'Imam Khomeini Hall', 'Gorgan', CURRENT_TIMESTAMP + INTERVAL '24 days', 50000.00, 150),
@@ -45,7 +42,6 @@ INSERT INTO tickets (home_team, away_team, sport_type, ticket_tier, organizer, v
 ('Chadormalu', 'Shahrdari Gonbad', 'volleyball', 'Regular', 'فدراسیون والیبال', 'Ardakan Hall', 'Yazd', CURRENT_TIMESTAMP + INTERVAL '28 days', 50000.00, 100),
 ('Iran', 'Brazil', 'volleyball', 'VVIP', 'فدراسیون جهانی', '12k Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '40 days', 250000.00, 500),
 ('Iran', 'Italy', 'volleyball', 'VVIP', 'فدراسیون جهانی', '12k Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '45 days', 250000.00, 500),
--- 24 to 30 (Basketball)
 ('Palayesh Naft', 'Kalleh', 'basketball', 'Regular', 'فدراسیون بسکتبال', 'Takhti Hall', 'Abadan', CURRENT_TIMESTAMP + INTERVAL '30 days', 70000.00, 100),
 ('Zob Ahan', 'Shahrdari Gorgan', 'basketball', 'VIP', 'فدراسیون بسکتبال', 'Mellat Hall', 'Isfahan', CURRENT_TIMESTAMP + INTERVAL '32 days', 80000.00, 150),
 ('Limondis', 'Mes Kerman', 'basketball', 'Regular', 'فدراسیون بسکتبال', 'Sadra Hall', 'Shiraz', CURRENT_TIMESTAMP + INTERVAL '34 days', 65000.00, 120),
@@ -54,7 +50,7 @@ INSERT INTO tickets (home_team, away_team, sport_type, ticket_tier, organizer, v
 ('Iran', 'Lebanon', 'basketball', 'VVIP', 'فیبا آسیا', 'Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '50 days', 150000.00, 300),
 ('Iran', 'China', 'basketball', 'VVIP', 'فیبا آسیا', 'Azadi Hall', 'Tehran', CURRENT_TIMESTAMP + INTERVAL '55 days', 180000.00, 300);
 
--- 3. Insert Specific Sport Details (10 Records Each)
+-- 3. Insert Specific Sport Details (30 Records)
 INSERT INTO football_details (ticket_id, league_name, stadium_name, stand_section, row_number, seat_number, ticket_type, amenities) VALUES 
 (1, 'لیگ برتر خلیج فارس', 'Azadi Stadium', 'جایگاه اصلی', 5, 12, 'Electronic', 'VIP, Parking Access'),
 (2, 'لیگ برتر خلیج فارس', 'Naghsh-e Jahan', 'جایگاه جنوبی', 10, 45, 'Paper', 'None'),
@@ -91,39 +87,39 @@ INSERT INTO basketball_details (ticket_id, league_name, hall_name, seat_section,
 (29, 'کاپ آسیا', 'Azadi Hall', 'CourtSide', 1, 3, 'Gold', 'Court Side Access'),
 (30, 'کاپ آسیا', 'Azadi Hall', 'CourtSide', 1, 4, 'Gold', 'Court Side Access');
 
--- 4. Insert Sample Reservations (12 Records)
+-- 4. Insert Sample Reservations (MODIFIED to create Rank 1 and Rank 2 tickets)
 INSERT INTO reservations (user_id, ticket_id, status, reserved_at, expires_at, cancelled_by_support_id) VALUES
-(1, 1, 'paid', CURRENT_TIMESTAMP - INTERVAL '2 hours', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),
-(1, 3, 'paid', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),
-(1, 5, 'paid', CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),
-(2, 3, 'pending', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),
-(3, 2, 'paid', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),
-(4, 8, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '12 days', CURRENT_TIMESTAMP - INTERVAL '11 days', 9),
-(5, 1, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '15 days', CURRENT_TIMESTAMP - INTERVAL '14 days', 10),
-(9, 4, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '18 days', CURRENT_TIMESTAMP - INTERVAL '17 days', 10),
-(6, 11, 'paid', CURRENT_TIMESTAMP - INTERVAL '20 days', CURRENT_TIMESTAMP - INTERVAL '19 days', NULL),
-(7, 15, 'paid', CURRENT_TIMESTAMP - INTERVAL '22 days', CURRENT_TIMESTAMP - INTERVAL '21 days', NULL),
-(8, 22, 'paid', CURRENT_TIMESTAMP - INTERVAL '25 days', CURRENT_TIMESTAMP - INTERVAL '24 days', NULL),
-(2, 29, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '28 days', CURRENT_TIMESTAMP - INTERVAL '27 days', 9);
+(1, 1, 'paid', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),  -- Ticket 1 (Sale 1)
+(2, 1, 'paid', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),   -- Ticket 1 (Sale 2)
+(3, 1, 'paid', CURRENT_TIMESTAMP - INTERVAL '5 hours', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL), -- Ticket 1 (Sale 3) -> Rank 1
+(4, 2, 'paid', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL),  -- Ticket 2 (Sale 1)
+(5, 2, 'paid', CURRENT_TIMESTAMP - INTERVAL '10 days', CURRENT_TIMESTAMP + INTERVAL '1 day', NULL), -- Ticket 2 (Sale 2) -> Rank 2
+(6, 3, 'paid', CURRENT_TIMESTAMP - INTERVAL '20 days', CURRENT_TIMESTAMP - INTERVAL '19 days', NULL),
+(7, 4, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '12 days', CURRENT_TIMESTAMP - INTERVAL '11 days', 9),
+(8, 5, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '15 days', CURRENT_TIMESTAMP - INTERVAL '14 days', 10),
+(1, 9, 'paid', CURRENT_TIMESTAMP - INTERVAL '22 days', CURRENT_TIMESTAMP - INTERVAL '21 days', NULL),
+(2, 11, 'paid', CURRENT_TIMESTAMP - INTERVAL '25 days', CURRENT_TIMESTAMP - INTERVAL '24 days', NULL),
+(3, 15, 'pending', CURRENT_TIMESTAMP - INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '23 hours', NULL),
+(4, 29, 'cancelled', CURRENT_TIMESTAMP - INTERVAL '28 days', CURRENT_TIMESTAMP - INTERVAL '27 days', 9);
 
--- 5. Insert Sample Payments (10 Records)
+-- 5. Insert Sample Payments (Aligned with Reservations)
 INSERT INTO payments (reservation_id, user_id, amount, status, payment_method, paid_at) VALUES
-(1, 1, 150000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '2 hours'),
-(2, 1, 120000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '3 days'),
-(3, 1, 90000.00, 'successful', 'wallet', CURRENT_TIMESTAMP - INTERVAL '5 days'),
-(5, 3, 100000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '10 days'),
-(9, 6, 40000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '20 days'),
-(10, 7, 200000.00, 'successful', 'wallet', CURRENT_TIMESTAMP - INTERVAL '22 days'),
-(11, 8, 250000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '25 days'),
-(4, 2, 120000.00, 'pending', 'online_gateway', NULL),
-(6, 4, 200000.00, 'failed', 'wallet', CURRENT_TIMESTAMP - INTERVAL '11 days'),
-(7, 5, 150000.00, 'failed', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '14 days');
+(1, 1, 150000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+(2, 2, 150000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+(3, 3, 150000.00, 'successful', 'wallet', CURRENT_TIMESTAMP - INTERVAL '5 hours'),
+(4, 4, 100000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+(5, 5, 100000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '10 days'),
+(6, 6, 120000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '20 days'),
+(9, 1, 60000.00, 'successful', 'wallet', CURRENT_TIMESTAMP - INTERVAL '22 days'),
+(10, 2, 40000.00, 'successful', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '25 days'),
+(7, 7, 80000.00, 'failed', 'wallet', CURRENT_TIMESTAMP - INTERVAL '11 days'),
+(8, 8, 90000.00, 'failed', 'online_gateway', CURRENT_TIMESTAMP - INTERVAL '14 days');
 
--- 6. Insert Sample Reports (10 Records)
+-- 6. Insert Sample Reports
 INSERT INTO reports (user_id, ticket_id, reservation_id, category, report_text, status) VALUES
-(4, 8, 6, 'Cancellation Issue', 'درخواست لغو رزرو به دلیل تاخیر در زمان مسابقه.', 'under_review'),
-(5, 1, 7, 'Payment Gateway Error', 'مبلغ کسر شد اما بلیط صادر نگردید.', 'under_review'),
-(4, 8, 6, 'Seat Conflict', 'صندلی انتخاب شده قبلاً فروخته شده بود.', 'resolved'),
+(4, 8, 7, 'Cancellation Issue', 'درخواست لغو رزرو به دلیل تاخیر در زمان مسابقه.', 'under_review'),
+(5, 1, 8, 'Payment Gateway Error', 'مبلغ کسر شد اما بلیط صادر نگردید.', 'under_review'),
+(4, 8, 7, 'Seat Conflict', 'صندلی انتخاب شده قبلاً فروخته شده بود.', 'resolved'),
 (2, 3, 4, 'Price Discrepancy', 'قیمت بلیط با تابلوی ورودی سالن مغایرت داشت.', 'resolved'),
 (1, 1, 1, 'Seat Quality', 'صندلی شکسته بود و قابل نشستن نبود.', 'under_review'),
 (3, 2, 5, 'Staff Behavior', 'رفتار مامورین چک کردن بلیط محترمانه نبود.', 'resolved'),
