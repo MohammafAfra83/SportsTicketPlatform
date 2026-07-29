@@ -8,9 +8,9 @@ services:
     environment:
       POSTGRES_DB: sports_ticket_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_PASSWORD: persianlord@0171
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./database/scripts:/scripts
       - ./database/init.sh:/docker-entrypoint-initdb.d/01-init.sh
@@ -20,6 +20,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # Addition of Redis caching service for Phase 3
+  redis:
+    image: redis:alpine
+    container_name: sports_ticket_redis
+    restart: always
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:
