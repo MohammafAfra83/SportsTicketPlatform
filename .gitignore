@@ -1,0 +1,53 @@
+# ==========================================
+# 1. OS Generated Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# 2. IDEs and Editors
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+
+# ==========================================
+# 3. Database & Logs
+# ==========================================
+*.log
+*.sql.bak
+*.dump
+pgadmin_logs/
+query_results.csv
+
+# ==========================================
+# 4. Security & Environment
+# ==========================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+
+# ==========================================
+# 5. Future Phases: Docker Volumes & Caches
+# ==========================================
+docker-data/
+pg_data/
+redis_data/
+es_data/
+__pycache__/
+venv/
+node_modules/
+dist/
+build/

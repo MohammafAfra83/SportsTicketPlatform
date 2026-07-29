@@ -1,10 +1,11 @@
 -- =============================================================================
 -- Database Project: Schema Definition (DDL)
--- File: database/scripts/schema.sql
+-- File: schema.sql
 -- Database Engine: PostgreSQL
+-- Description: Creates custom ENUM types, core tables, and relational constraints.
 -- =============================================================================
 
--- Drop existing tables and types for a clean execution
+-- Drop existing tables and custom types for a clean setup
 DROP TABLE IF EXISTS reports CASCADE;
 DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS reservations CASCADE;
@@ -19,7 +20,7 @@ DROP TYPE IF EXISTS reservation_status CASCADE;
 DROP TYPE IF EXISTS payment_status CASCADE;
 DROP TYPE IF EXISTS sport_type_enum CASCADE;
 
--- Create ENUM data types
+-- Define custom ENUM types
 CREATE TYPE user_role AS ENUM ('audience', 'support');
 CREATE TYPE reservation_status AS ENUM ('pending', 'paid', 'cancelled');
 CREATE TYPE payment_status AS ENUM ('successful', 'failed', 'pending');
@@ -35,7 +36,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role user_role DEFAULT 'audience',
     city VARCHAR(50) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE, -- Soft Delete flag
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -104,7 +105,7 @@ CREATE TABLE reservations (
     CONSTRAINT check_reservation_dates CHECK (reserved_at < expires_at)
 );
 
--- 7. Financial Transactions & Payments Table (Protected with RESTRICT)
+-- 7. Financial Transactions & Payments Table
 CREATE TABLE payments (
     payment_id SERIAL PRIMARY KEY,
     reservation_id INT UNIQUE NOT NULL REFERENCES reservations(reservation_id) ON DELETE RESTRICT,
@@ -126,18 +127,3 @@ CREATE TABLE reports (
     status VARCHAR(50) DEFAULT 'under_review',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- =============================================================================
--- INDEXES FOR PHASE 1 SEARCH OPTIMIZATION
--- =============================================================================
-
--- Performance B-Tree Indexes
-CREATE INDEX IF NOT EXISTS idx_tickets_sport_city ON tickets(sport_type, city);
-CREATE INDEX IF NOT EXISTS idx_tickets_match_date ON tickets(match_date ASC);
-CREATE INDEX IF NOT EXISTS idx_reservations_user_status ON reservations(user_id, status);
-
--- GIN & Trigram Indexes for fast wildcard ILIKE text search
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX IF NOT EXISTS idx_tickets_venue_trgm ON tickets USING GIN (venue_name gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_tickets_home_team_trgm ON tickets USING GIN (home_team gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_tickets_away_team_trgm ON tickets USING GIN (away_team gin_trgm_ops);

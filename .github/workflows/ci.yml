@@ -1,49 +1,40 @@
-name: Phase 1 CI - Schema & Database Verification
+name: Phase 2 CI - Dockerized Database & Query Verification
 
 on:
   push:
-    branches: [phase1-erd-design, main]
+    branches: [phase2-database-implementation, main]
   pull_request:
-    branches: [phase1-erd-design, main]
+    branches: [phase2-database-implementation, main]
 
 jobs:
-  verify-database-suite:
+  verify-docker-database:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: sports_ticket_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgrespassword
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Make init.sh executable
+        run: chmod +x database/init.sh
 
-      - name: 1. Test DDL Execution (schema.sql)
-        env:
-          PGPASSWORD: postgrespassword
-        run: |
-          echo "Executing schema.sql..."
-          psql -h localhost -U postgres -d sports_ticket_db -v ON_ERROR_STOP=1 -f database/scripts/schema.sql
+      - name: 1. Start Database via Docker Compose
+        run: docker compose up -d
 
-      - name: Verify Created Tables
-        env:
-          PGPASSWORD: postgrespassword
+      - name: 2. Wait for Database Initialization to Complete
         run: |
-          echo "Checking if tables were successfully created..."
-          psql -h localhost -U postgres -d sports_ticket_db -c "\dt"
+          echo "Waiting for Postgres container to run initialization scripts..."
+          sleep 10
+
+      - name: 3. Check Container Logs for Errors
+        run: docker logs sports_ticket_postgres
+
+      - name: 4. Verify Final Database Integrity
+        run: |
+          echo "Checking table structure and record counts inside Docker..."
+          docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "\dt"
+          docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_users FROM users;"
+          docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_tickets FROM tickets;"
+
+      - name: 5. Shutdown Containers
+        if: always()
+        run: docker compose down -v
