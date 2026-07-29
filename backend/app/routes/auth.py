@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
-from app.schemas.auth import OTPRequest, UserSignup, UserLogin
+from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from app.schemas.auth import OTPRequest, OTPResponse, UserSignup, TokenResponse
 from app.redis_client import redis_client
 from app.database import get_db_cursor
 from app.security import (
@@ -11,18 +12,23 @@ import random
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
+# Configuring the security system in Swagger to add the Authorize button 🔓
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-@router.post("/otp")
+
+@router.post(
+    "/otp",
+    response_model=OTPResponse,
+    status_code=status.HTTP_200_OK,
+    responses={500: {"description": "Internal Server Error"}},
+)
 def request_otp(data: OTPRequest):
     # Generate a random 6-digit OTP code.
     otp_code = str(random.randint(100000, 999999))
-
     # Store the OTP in Redis with a TTL of 120 seconds.
     redis_key = f"otp:{data.phone}"
     redis_client.set(redis_key, otp_code, ex=120)
 
-    # In a production environment, the OTP should be sent via SMS.
-    # For testing purposes, the OTP is returned in the response.
     return {
         "message": "OTP sent successfully",
         "otp": otp_code,
@@ -30,7 +36,15 @@ def request_otp(data: OTPRequest):
     }
 
 
-@router.post("/signup")
+@router.post(
+    "/signup",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"description": "Invalid or expired OTP / User already exists"},
+        500: {"description": "Database error"},
+    },
+)
 def signup(data: UserSignup):
     # Retrieve and validate the OTP from Redis.
     redis_key = f"otp:{data.phone}"
@@ -41,7 +55,6 @@ def signup(data: UserSignup):
 
     hashed_pw = get_password_hash(data.password)
 
-    # Insert the user directly into PostgreSQL without using an ORM.
     try:
         with get_db_cursor() as cursor:
             # Check whether the phone number is already registered.
@@ -55,9 +68,6 @@ def signup(data: UserSignup):
                     detail="User already exists",
                 )
 
-            # Insert the new user.
-            # If your database column names differ, update this query
-            # accordingly.
             insert_query = (
                 "INSERT INTO users (phone, password_hash, "
                 "first_name, last_name, role) "
@@ -75,7 +85,6 @@ def signup(data: UserSignup):
             )
             new_user = cursor.fetchone()
 
-            # Generate a JWT access token for the newly registered user.
             token_data = {"sub": str(new_user["id"]), "role": new_user["role"]}
             access_token = create_access_token(data=token_data)
 
@@ -87,28 +96,39 @@ def signup(data: UserSignup):
                 "token_type": "bearer",
                 "message": "Signup successful",
             }
-
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        error_message = f"Database error: {str(e)}"
-        raise HTTPException(status_code=500, detail=error_message)
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-@router.post("/login")
-def login(data: UserLogin):
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        401: {"description": "Invalid phone or password"},
+        500: {"description": "Database error"},
+    },
+)
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+       The OAuth2 Form standard is used for login.
+    Note: You must enter your mobile number in the 'username' field in Swagger.
+    """
     with get_db_cursor() as cursor:
-        select_query = (
-            "SELECT id, password_hash, role "
-            "FROM users WHERE phone = %s;"
-        )
-        cursor.execute(select_query, (data.phone,))
+        select_query = "SELECT id, password_hash, role FROM users WHERE phone = %s;"
+        cursor.execute(select_query, (form_data.username,))
         user = cursor.fetchone()
 
-        if not user or not verify_password(data.password, user["password_hash"]):
+        if not user or not verify_password(
+            form_data.password,
+            user["password_hash"],
+        ):
             raise HTTPException(
-                status_code=401,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid phone or password",
+                headers={"WWW-Authenticate": "Bearer"},
             )
 
         token_data = {
@@ -116,7 +136,23 @@ def login(data: UserLogin):
             "role": user["role"],
         }
         access_token = create_access_token(data=token_data)
+
         return {
             "access_token": access_token,
             "token_type": "bearer",
+            "message": "Login successful",
         }
+
+
+# --- Test route to demonstrate security locking on endpoints ---
+@router.get(
+    "/me/test-auth",
+    tags=["Authentication"],
+    responses={401: {"description": "Not authenticated"}},
+)
+def test_authentication(token: str = Depends(oauth2_scheme)):
+    """This endpoint only works with a valid token."""
+    return {
+        "message": "You have been successfully authenticated!",
+        "token_received": token,
+    }

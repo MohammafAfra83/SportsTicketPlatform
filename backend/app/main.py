@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.redis_client import check_redis_connection
 from app.database import get_db_cursor
+from app.routes import auth
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -9,8 +10,11 @@ app = FastAPI(
     description="SportsTicketPlatform API - Phase 3 (Raw SQL & Redis Cache)",
 )
 
+app.include_router(auth.router)
 
-@app.get("/")
+
+# System Health tag to exit default mode
+@app.get("/", tags=["System Health"])
 def health_check():
     # Checking Redis Connection
     redis_status = check_redis_connection()
