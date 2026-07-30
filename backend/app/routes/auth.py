@@ -12,7 +12,7 @@ import random
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-# Configuring the security system in Swagger to add the Authorize button 🔓
+# Swagger Security System for the Authorize Button 🔓
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
@@ -23,10 +23,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
     responses={500: {"description": "Internal Server Error"}},
 )
 def request_otp(data: OTPRequest):
-    # Generate a random 6-digit OTP code.
+    # Generating a 6-digit OTP
     otp_code = str(random.randint(100000, 999999))
-    # Store the OTP in Redis with a TTL of 120 seconds.
-    redis_key = f"otp:{data.phone}"
+
+    # Saving in Redis with TTL for 120 seconds
+    redis_key = f"otp:{data.phone_number}"
     redis_client.set(redis_key, otp_code, ex=120)
 
     return {
@@ -41,13 +42,17 @@ def request_otp(data: OTPRequest):
     response_model=TokenResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: {"description": "Invalid or expired OTP / User already exists"},
+        400: {
+            "description": (
+                "Invalid/Expired OTP or User/Email already exists"
+            )
+        },
         500: {"description": "Database error"},
     },
 )
 def signup(data: UserSignup):
-    # Retrieve and validate the OTP from Redis.
-    redis_key = f"otp:{data.phone}"
+    # Validating OTP Code from Redis
+    redis_key = f"otp:{data.phone_number}"
     saved_otp = redis_client.get(redis_key)
 
     if not saved_otp or saved_otp != data.otp_code:
@@ -57,38 +62,57 @@ def signup(data: UserSignup):
 
     try:
         with get_db_cursor() as cursor:
-            # Check whether the phone number is already registered.
-            cursor.execute(
-                "SELECT id FROM users WHERE phone = %s;",
-                (data.phone,),
-            )
+            # Validating that the phone number or email does not already
+            # exist in the database
+            check_query = """
+                SELECT user_id FROM users 
+                WHERE phone_number = %s OR email = %s;
+            """
+            cursor.execute(check_query, (data.phone_number, data.email))
             if cursor.fetchone():
                 raise HTTPException(
                     status_code=400,
-                    detail="User already exists",
+                    detail=(
+                        "User with this phone number or email "
+                        "already exists"
+                    ),
                 )
 
-            insert_query = (
-                "INSERT INTO users (phone, password_hash, "
-                "first_name, last_name, role) "
-                "VALUES (%s, %s, %s, %s, 'audience') "
-                "RETURNING id, role;"
-            )
+            # Direct User Insertion into the Database Without an ORM
+            insert_query = """
+                INSERT INTO users (
+                    first_name,
+                    last_name,
+                    phone_number,
+                    email,
+                    password_hash,
+                    city,
+                    role
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, 'audience')
+                RETURNING user_id, role;
+            """
             cursor.execute(
                 insert_query,
                 (
-                    data.phone,
-                    hashed_pw,
                     data.first_name,
                     data.last_name,
+                    data.phone_number,
+                    data.email,
+                    hashed_pw,
+                    data.city,
                 ),
             )
             new_user = cursor.fetchone()
 
-            token_data = {"sub": str(new_user["id"]), "role": new_user["role"]}
+            # Issuing a JWT using user_id
+            token_data = {
+                "sub": str(new_user["user_id"]),
+                "role": new_user["role"],
+            }
             access_token = create_access_token(data=token_data)
 
-            # Delete the consumed OTP from Redis to prevent reuse.
+            # Clearing the used OTP from Redis
             redis_client.delete(redis_key)
 
             return {
@@ -99,7 +123,10 @@ def signup(data: UserSignup):
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}",
+        )
 
 
 @router.post(
@@ -107,17 +134,21 @@ def signup(data: UserSignup):
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        401: {"description": "Invalid phone or password"},
+        401: {"description": "Invalid phone number or password"},
         500: {"description": "Database error"},
     },
 )
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
-       The OAuth2 Form standard is used for login.
-    Note: You must enter your mobile number in the 'username' field in Swagger.
+    Logging in using the standard OAuth2 form.
+    Use your phone number as the username on Swagger.
     """
     with get_db_cursor() as cursor:
-        select_query = "SELECT id, password_hash, role FROM users WHERE phone = %s;"
+        select_query = """
+            SELECT user_id, password_hash, role 
+            FROM users 
+            WHERE phone_number = %s;
+        """
         cursor.execute(select_query, (form_data.username,))
         user = cursor.fetchone()
 
@@ -127,12 +158,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid phone or password",
+                detail="Invalid phone number or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
         token_data = {
-            "sub": str(user["id"]),
+            "sub": str(user["user_id"]),
             "role": user["role"],
         }
         access_token = create_access_token(data=token_data)
@@ -144,14 +175,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         }
 
 
-# --- Test route to demonstrate security locking on endpoints ---
 @router.get(
     "/me/test-auth",
     tags=["Authentication"],
     responses={401: {"description": "Not authenticated"}},
 )
 def test_authentication(token: str = Depends(oauth2_scheme)):
-    """This endpoint only works with a valid token."""
+    """This endpoint is for testing the JWT security lock."""
     return {
         "message": "You have been successfully authenticated!",
         "token_received": token,

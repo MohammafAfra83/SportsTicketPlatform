@@ -1,21 +1,23 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 # --- Input Models (Request) ---
 class OTPRequest(BaseModel):
-    phone: str
+    phone_number: str
 
 
 class UserSignup(BaseModel):
-    phone: str
+    phone_number: str
+    email: EmailStr
     password: str
     otp_code: str
     first_name: str
     last_name: str
+    city: str
 
 
 class UserLogin(BaseModel):
-    phone: str
+    phone_number: str
     password: str
 
 
