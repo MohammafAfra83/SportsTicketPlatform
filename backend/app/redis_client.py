@@ -1,5 +1,6 @@
 import redis
 from app.config import settings
+import random
 
 # Connecting to the Redis cache. Use decode_responses to receive
 # text instead of bytes.
@@ -34,3 +35,31 @@ def clear_ticket_cache():
             redis_client.delete(key)
     except Exception as e:
         print(f"Redis cache clearing error: {e}")
+
+
+# redis_client = redis.Redis(...)
+
+
+def generate_and_set_otp(phone_number: str) -> str:
+    """Generate a random 6-digit code and store it in Redis.
+
+    The code expires after 120 seconds.
+    """
+    otp_code = str(random.randint(100000, 999999))
+    redis_key = f"otp:{phone_number}"
+
+    redis_client.setex(redis_key, 120, otp_code)
+    return otp_code
+
+
+def verify_otp(phone_number: str, user_otp: str) -> bool:
+    """Verifying the entered code using Redis cache"""
+    redis_key = f"otp:{phone_number}"
+    stored_otp = redis_client.get(redis_key)
+
+    if stored_otp and stored_otp == user_otp:
+        # For preventing reuse, delete the code after successful
+        # verification (Invalidation)
+        redis_client.delete(redis_key)
+        return True
+    return False
