@@ -12,3 +12,9 @@ class BookingResponse(BaseModel):
     payment_status: str | None
     amount_paid: float | None
     reserved_at: datetime
+
+
+class UserProfileUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    city: str | None = None

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from app.schemas.users import BookingResponse
+from app.schemas.users import BookingResponse, UserProfileUpdate
 from app.database import get_db_cursor
 from app.routes.reservations import get_current_user_id
+from app.redis_client import invalidate_user_profile_cache
 
 router = APIRouter(prefix="/api/user", tags=["User Profile"])
 
@@ -56,6 +57,61 @@ def get_user_bookings(user_id: int = Depends(get_current_user_id)):
                 )
 
             return bookings
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}",
+        )
+
+
+@router.put(
+    "/profile",
+    status_code=status.HTTP_200_OK,
+    summary="Update user profile and invalidate cache",
+)
+def update_profile(
+    data: UserProfileUpdate,
+    user_id: int = Depends(get_current_user_id),
+):
+    try:
+        with get_db_cursor() as cursor:
+            # Build an UPDATE query only for fields that are provided
+            updates = []
+            params = []
+
+            if data.first_name:
+                updates.append("first_name = %s")
+                params.append(data.first_name)
+            if data.last_name:
+                updates.append("last_name = %s")
+                params.append(data.last_name)
+            if data.city:
+                updates.append("city = %s")
+                params.append(data.city)
+
+            if not updates:
+                raise HTTPException(
+                    status_code=400, detail="No data provided to update"
+                )
+
+            set_clause = ", ".join(updates)
+            query = (
+                "UPDATE users SET "
+                f"{set_clause} "
+                "WHERE user_id = %s"
+            )
+            params.append(user_id)
+
+            cursor.execute(query, tuple(params))
+            cursor.connection.commit()
+
+            # Dynamically invalidate the user profile cache
+            invalidate_user_profile_cache(user_id)
+
+            return {
+                "message": "Profile updated successfully. Cache invalidated."
+            }
 
     except Exception as e:
         raise HTTPException(
