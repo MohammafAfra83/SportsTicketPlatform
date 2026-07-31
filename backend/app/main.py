@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.redis_client import check_redis_connection
 from app.database import get_db_cursor
-from app.routes import auth, tickets, reservations, payments, users
+from app.routes import auth, tickets, reservations, payments, users, reports
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -15,6 +15,7 @@ app.include_router(tickets.router)
 app.include_router(reservations.router)
 app.include_router(payments.router)
 app.include_router(users.router)
+app.include_router(reports.router)
 
 
 # System Health tag to exit default mode
