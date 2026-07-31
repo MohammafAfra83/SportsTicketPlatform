@@ -1,14 +1,13 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from app.schemas.auth import OTPRequest, OTPResponse, UserSignup, TokenResponse
-from app.redis_client import redis_client
+from app.redis_client import generate_and_set_otp, verify_otp
 from app.database import get_db_cursor
 from app.security import (
     create_access_token,
     get_password_hash,
     verify_password,
 )
-import random
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -23,12 +22,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
     responses={500: {"description": "Internal Server Error"}},
 )
 def request_otp(data: OTPRequest):
-    # Generating a 6-digit OTP
-    otp_code = str(random.randint(100000, 999999))
-
-    # Saving in Redis with TTL for 120 seconds
-    redis_key = f"otp:{data.phone_number}"
-    redis_client.set(redis_key, otp_code, ex=120)
+    # Delegate generation and Redis storage to our helper function
+    otp_code = generate_and_set_otp(data.phone_number)
 
     return {
         "message": "OTP sent successfully",
@@ -51,21 +46,20 @@ def request_otp(data: OTPRequest):
     },
 )
 def signup(data: UserSignup):
-    # Validating OTP Code from Redis
-    redis_key = f"otp:{data.phone_number}"
-    saved_otp = redis_client.get(redis_key)
-
-    if not saved_otp or saved_otp != data.otp_code:
-        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+    # 1. Verify OTP using our helper (it also handles deletion on success)
+    if not verify_otp(data.phone_number, data.otp_code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OTP code.",
+        )
 
     hashed_pw = get_password_hash(data.password)
-
     try:
         with get_db_cursor() as cursor:
-            # Validating that the phone number or email does not already
-            # exist in the database
+            # 2. Validating that the phone number or email
+            #    does not already exist
             check_query = """
-                SELECT user_id FROM users 
+                SELECT user_id FROM users
                 WHERE phone_number = %s OR email = %s;
             """
             cursor.execute(check_query, (data.phone_number, data.email))
@@ -73,12 +67,12 @@ def signup(data: UserSignup):
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        "User with this phone number or email "
-                        "already exists"
+                        "User with this phone number or "
+                        "email already exists"
                     ),
                 )
 
-            # Direct User Insertion into the Database Without an ORM
+            # 3. Direct User Insertion into the Database Without an ORM
             insert_query = """
                 INSERT INTO users (
                     first_name,
@@ -105,21 +99,19 @@ def signup(data: UserSignup):
             )
             new_user = cursor.fetchone()
 
-            # Issuing a JWT using user_id
+            # 4. Issuing a JWT using user_id
             token_data = {
                 "sub": str(new_user["user_id"]),
                 "role": new_user["role"],
             }
             access_token = create_access_token(data=token_data)
 
-            # Clearing the used OTP from Redis
-            redis_client.delete(redis_key)
-
             return {
                 "access_token": access_token,
                 "token_type": "bearer",
                 "message": "Signup successful",
             }
+
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
@@ -145,8 +137,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
     with get_db_cursor() as cursor:
         select_query = """
-            SELECT user_id, password_hash, role 
-            FROM users 
+            SELECT user_id, password_hash, role
+            FROM users
             WHERE phone_number = %s;
         """
         cursor.execute(select_query, (form_data.username,))
