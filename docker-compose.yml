@@ -29,6 +29,29 @@ services:
     ports:
       - "6379:6379"
 
+  # Addition of FastAPI Backend Service
+  api:
+    build:
+      context: ./backend # Specifying the path to the folder containing the Dockerfile
+    container_name: sports_ticket_api
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres_db:
+        condition: service_healthy # Ensuring the backend service waits for the database to be healthy before starting
+      redis:
+        condition: service_started
+    environment:
+      # Environment variables for dynamic connection of the backend to the database and cache within the isolated Docker network
+      - DB_HOST=postgres_db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=persianlord@0171
+      - DB_NAME=sports_ticket_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
 volumes:
   postgres_data:
     driver: local
