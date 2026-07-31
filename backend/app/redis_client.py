@@ -63,3 +63,9 @@ def verify_otp(phone_number: str, user_otp: str) -> bool:
         redis_client.delete(redis_key)
         return True
     return False
+
+
+def invalidate_user_profile_cache(user_id: int):
+    """Clearing the user profile cache when editing information"""
+    redis_key = f"user:profile:{user_id}"
+    redis_client.delete(redis_key)
