@@ -22,3 +22,27 @@ class TicketListResponse(BaseModel):
     source: str
     count: int
     tickets: list[TicketResponse]
+
+
+class TicketDetailResponse(TicketResponse):
+    # Consolidated 3NF Specific Details
+    league_name: str | None = None
+    facility_name: str | None = None
+    seat_section: str | None = None
+    row_number: int | None = None
+    seat_number: int | None = None
+    specific_ticket_tier: str | None = None
+    amenities: str | None = None
+
+
+class CancellationPenaltyResponse(BaseModel):
+    reservation_id: int
+    match_date: datetime
+    hours_until_match: float
+    penalty_percentage: int
+    penalty_amount: float
+    refund_amount: float
+
+
+class CancelTicketRequest(BaseModel):
+    reservation_id: int
