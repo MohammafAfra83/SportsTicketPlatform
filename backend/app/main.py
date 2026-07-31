@@ -10,6 +10,7 @@ from app.routes import (
     users,
     reports,
     admin,
+    locations,
 )
 
 app = FastAPI(
@@ -25,6 +26,7 @@ app.include_router(payments.router)
 app.include_router(users.router)
 app.include_router(reports.router)
 app.include_router(admin.router)
+app.include_router(locations.router)
 
 
 # System Health tag to exit default mode
