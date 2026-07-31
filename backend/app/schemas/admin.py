@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 
 
 class DashboardStatsResponse(BaseModel):
@@ -6,3 +8,22 @@ class DashboardStatsResponse(BaseModel):
     total_tickets_sold: int
     total_cancellations: int
     pending_reports: int
+
+
+class AdminManageRequest(BaseModel):
+    entity_type: str  # "ticket", "reservation", or "report"
+    entity_id: int
+    new_status: str
+
+
+class AdminReservationResponse(BaseModel):
+    reservation_id: int
+    user_id: int
+    first_name: str
+    last_name: str
+    phone_number: str
+    ticket_id: int
+    venue_name: str
+    match_date: datetime
+    status: str
+    payment_amount: float | None = None
