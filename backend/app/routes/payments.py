@@ -4,7 +4,7 @@ from app.schemas.tickets import CancelTicketRequest
 from app.database import get_db_cursor
 from app.routes.reservations import get_current_user_id
 from app.redis_client import clear_ticket_cache
-from datetime import datetime, timezone
+from datetime import datetime
 
 router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
@@ -180,10 +180,7 @@ def calculate_cancellation_penalty(
             if match_date <= now:
                 raise HTTPException(
                     status_code=400,
-                    detail=(
-                        "Match has already started or finished. Cannot "
-                        "cancel."
-                    ),
+                    detail=("Match has already started or finished. Cannot " "cancel."),
                 )
 
             time_diff = match_date - now
