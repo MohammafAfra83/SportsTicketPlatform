@@ -22,3 +22,15 @@ def check_redis_connection():
         return redis_client.ping()
     except Exception:
         return False
+
+
+def clear_ticket_cache():
+    """Delete cached ticket search queries from Redis.
+    This ensures stale search results are not served from cache.
+    """
+    try:
+        # Scan and delete all keys matching the ticket search pattern
+        for key in redis_client.scan_iter("tickets:search:*"):
+            redis_client.delete(key)
+    except Exception as e:
+        print(f"Redis cache clearing error: {e}")
