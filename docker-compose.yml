@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres_db:
     image: postgres:16-alpine
@@ -28,6 +26,11 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # Addition of FastAPI Backend Service
   api:
@@ -39,11 +42,11 @@ services:
       - "8000:8000"
     depends_on:
       postgres_db:
-        condition: service_healthy # Ensuring the backend service waits for the database to be healthy before starting
+        condition: service_healthy # Ensuring the backend waits for DB
       redis:
-        condition: service_started
+        condition: service_healthy # Ensuring the backend waits for Redis
     environment:
-      # Environment variables for dynamic connection of the backend to the database and cache within the isolated Docker network
+      # Environment variables for dynamic connection
       - DB_HOST=postgres_db
       - DB_PORT=5432
       - DB_USER=postgres
@@ -51,6 +54,17 @@ services:
       - DB_NAME=sports_ticket_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_STREAM); s.settimeout(2); s.connect(('127.0.0.1', 8000)); s.close()",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:
