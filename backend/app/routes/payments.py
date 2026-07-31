@@ -180,7 +180,10 @@ def calculate_cancellation_penalty(
             if match_date <= now:
                 raise HTTPException(
                     status_code=400,
-                    detail=("Match has already started or finished. Cannot " "cancel."),
+                    detail=(
+                        "Match has already started or finished. Cannot "
+                        "cancel."
+                    ),
                 )
 
             time_diff = match_date - now
