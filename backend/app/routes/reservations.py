@@ -4,6 +4,7 @@ from jose import jwt, JWTError
 from app.schemas.reservations import ReservationRequest, ReservationResponse
 from app.database import get_db_cursor
 from app.config import settings
+from app.redis_client import clear_ticket_cache
 
 router = APIRouter(prefix="/api/reservations", tags=["Reservations"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -92,6 +93,8 @@ def reserve_ticket(
             # Explicitly commit the transaction
             # (if your context manager doesn't auto-commit)
             cursor.connection.commit()
+            # Invalidate Redis cache because remaining_capacity has changed! ⚡
+            clear_ticket_cache()
 
             return {
                 "reservation_id": reservation["reservation_id"],
