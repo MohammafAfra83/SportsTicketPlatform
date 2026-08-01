@@ -2,14 +2,13 @@ name: Phase 3 CI - Full Stack Verification
 
 on:
   push:
-    branches: [main]
+    branches: [main, phase3-backend-implementation]
   pull_request:
     branches: [main]
 
 jobs:
   verify-full-stack:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
@@ -17,11 +16,9 @@ jobs:
       - name: Make init.sh executable
         run: chmod +x database/init.sh
 
-      # Added --build flag to ensure the new FastAPI Dockerfile is built
       - name: 1. Start All Services via Docker Compose
         run: docker compose up -d --build
 
-      # Increased sleep time slightly to allow all 3 containers to initialize
       - name: 2. Wait for Services to Initialize
         run: |
           echo "Waiting for Postgres, Redis, and API containers to be ready..."
@@ -30,11 +27,9 @@ jobs:
       - name: 3. Check Container Logs for Errors (Database)
         run: docker logs sports_ticket_postgres
 
-      # Added API logs check for easier debugging in GitHub Actions UI
       - name: 4. Check Container Logs for Errors (API)
         run: docker logs sports_ticket_api
 
-      # Retained your excellent Phase 2 database integrity checks
       - name: 5. Verify Database Integrity
         run: |
           echo "Checking table structure and record counts inside Docker..."
@@ -42,35 +37,11 @@ jobs:
           docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_users FROM users;"
           docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -c "SELECT COUNT(*) AS total_tickets FROM tickets;"
 
-      # Phase 3 Addition: Setup Python environment for running Pytest
-      - name: 6. Set up Python for Backend Testing
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: 7. Install Backend Test Dependencies
+      - name: 6. Run Pytest (API Integration Tests inside Docker)
         run: |
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          pip install pytest httpx
+          echo "Running backend test suite inside the API container..."
+          docker exec sports_ticket_api python -m pytest tests/ -v
 
-      # Phase 3 Addition: Run Pytest against the live Docker Compose environment
-      - name: 8. Run Pytest (API Integration Tests)
-        env:
-          # Connecting to exposed localhost ports from docker-compose.yml
-          DB_HOST: localhost
-          DB_PORT: 5433
-          DB_USER: postgres
-          DB_PASSWORD: persianlord@0171
-          DB_NAME: sports_ticket_db
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-        run: |
-          echo "Running backend test suite..."
-          # Assuming you will place your test files in 'backend/tests/'
-          pytest backend/tests/ -v
-
-      # Always tear down the environment to free up GitHub runner resources
-      - name: 9. Shutdown Containers
+      - name: 7. Shutdown Containers
         if: always()
         run: docker compose down -v
