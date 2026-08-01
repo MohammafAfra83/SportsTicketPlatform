@@ -13,6 +13,17 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
+      - name: Create .env file
+        run: |
+          touch .env
+          echo "DB_HOST=sports_ticket_postgres" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=persianlord@0171" >> .env
+          echo "DB_NAME=sports_ticket_db" >> .env
+          echo "REDIS_HOST=sports_ticket_redis" >> .env
+          echo "REDIS_PORT=6379" >> .env
+
       - name: Make init.sh executable
         run: chmod +x database/init.sh
 
