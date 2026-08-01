@@ -33,7 +33,7 @@ jobs:
         run: chmod +x database/init.sh
 
       - name: 1. Start All Services via Docker Compose
-        run: docker compose up -d --build
+        run: docker compose --env-file .env up -d --build
 
       - name: 2. Wait for Services to Initialize (Smart Wait)
         run: |
@@ -76,3 +76,7 @@ jobs:
         run: |
           echo "Running backend test suite inside the API container..."
           docker exec sports_ticket_api python -m pytest
+
+      - name: 7. Shutdown Containers
+        if: always()
+        run: docker compose down -v
