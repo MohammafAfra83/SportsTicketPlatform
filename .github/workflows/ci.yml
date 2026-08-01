@@ -15,14 +15,19 @@ jobs:
 
       - name: Create .env file
         run: |
-          touch .env
-          echo "DB_HOST=sports_ticket_postgres" >> .env
-          echo "DB_PORT=5432" >> .env
-          echo "DB_USER=postgres" >> .env
-          echo "DB_PASSWORD=persianlord@0171" >> .env
-          echo "DB_NAME=sports_ticket_db" >> .env
-          echo "REDIS_HOST=sports_ticket_redis" >> .env
-          echo "REDIS_PORT=6379" >> .env
+          cat > .env <<EOF
+          DB_HOST=postgres_db
+          DB_PORT=5432
+          DB_USER=postgres
+          DB_PASSWORD=persianlord@0171
+          DB_NAME=sports_ticket_db
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          # JWT Configuration for CI/CD Testing
+          JWT_SECRET_KEY=super_secret_test_key_for_ci_cd_12345
+          JWT_ALGORITHM=HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES=30
+          EOF
 
       - name: Make init.sh executable
         run: chmod +x database/init.sh
@@ -30,10 +35,29 @@ jobs:
       - name: 1. Start All Services via Docker Compose
         run: docker compose up -d --build
 
-      - name: 2. Wait for Services to Initialize
+      - name: 2. Wait for Services to Initialize (Smart Wait)
         run: |
-          echo "Waiting for Postgres, Redis, and API containers to be ready..."
-          sleep 15
+          echo "Waiting for Postgres to be ready..."
+          for i in {1..30}; do
+            docker exec sports_ticket_postgres pg_isready -U postgres -d sports_ticket_db && break
+            echo "Waiting for postgres..." && sleep 2
+          done
+
+          echo "Waiting for API container to complete startup..."
+          for i in {1..30}; do
+            if docker logs sports_ticket_api 2>&1 | grep -q -E "Application startup complete|Uvicorn running on"; then
+              echo "✅ API is up and running!"
+              break
+            fi
+            echo "Waiting for API..." && sleep 2
+          done
+
+          # Fail fast if API container crashed
+          if [ "$(docker inspect -f '{{.State.Running}}' sports_ticket_api 2>/dev/null)" != "true" ]; then
+            echo "❌ API container crashed! Printing logs:"
+            docker logs sports_ticket_api
+            exit 1
+          fi
 
       - name: 3. Check Container Logs for Errors (Database)
         run: docker logs sports_ticket_postgres
@@ -51,8 +75,4 @@ jobs:
       - name: 6. Run Pytest (API Integration Tests inside Docker)
         run: |
           echo "Running backend test suite inside the API container..."
-          docker exec sports_ticket_api python -m pytest tests/ -v
-
-      - name: 7. Shutdown Containers
-        if: always()
-        run: docker compose down -v
+          docker exec sports_ticket_api python -m pytest
