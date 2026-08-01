@@ -5,13 +5,13 @@ from fastapi import (
     status,
 )
 
-from app.schemas.tickets import (
-    TicketListResponse,
-    TicketDetailResponse,
-)
-from app.redis_client import redis_client
-from app.database import get_db_cursor
 import json
+from app.database import get_db_cursor
+from app.redis_client import redis_client
+from app.schemas.tickets import (
+    TicketDetailResponse,
+    TicketListResponse,
+)
 
 router = APIRouter(
     prefix="/api/tickets",
@@ -23,7 +23,10 @@ router = APIRouter(
     "/search",
     response_model=TicketListResponse,
     status_code=status.HTTP_200_OK,
-    summary="Search matches with smart Redis caching",
+    summary=(
+        "Advanced Ticket Search with Smart Redis "
+        "Caching & Multi-Filtering"
+    ),
 )
 def search_tickets(
     sport_type: str | None = Query(
@@ -34,11 +37,33 @@ def search_tickets(
         None,
         description="Name of the venue/stadium",
     ),
+    min_price: float | None = Query(
+        None,
+        description="Minimum ticket price",
+    ),
+    max_price: float | None = Query(
+        None,
+        description="Maximum ticket price",
+    ),
+    team_name: str | None = Query(
+        None,
+        description="Search by team name (home or away)",
+    ),
+    ticket_tier: str | None = Query(
+        None,
+        description="Ticket tier: VIP, Normal, Premium",
+    ),
+    start_date: str | None = Query(
+        None,
+        description="Matches starting from date (YYYY-MM-DD)",
+    ),
 ):
-    # 1. Define unique cache key
+    # 1. Define unique cache key including all advanced filters
     cache_key = (
-        f"tickets:search:{sport_type or 'all'}:"
-        f"{venue or 'all'}"
+        f"tickets:search:{sport_type or 'all'}:{venue or 'all'}:"
+        f"{min_price or '0'}:{max_price or 'inf'}:"
+        f"{team_name or 'all'}:{ticket_tier or 'all'}:"
+        f"{start_date or 'all'}"
     )
 
     # 2. Check for Cache Hit in Redis
@@ -51,7 +76,7 @@ def search_tickets(
             "tickets": tickets_list,
         }
 
-    # 3. Cache Miss: Execute raw SQL query on PostgreSQL
+    # 3. Cache Miss: Execute dynamic raw SQL query on PostgreSQL
     try:
         with get_db_cursor() as cursor:
             query = """
@@ -73,6 +98,7 @@ def search_tickets(
             """
             params = []
 
+            # Apply dynamic filters based on user input
             if sport_type:
                 query += " AND sport_type = %s"
                 params.append(sport_type)
@@ -81,6 +107,28 @@ def search_tickets(
                 query += " AND venue_name ILIKE %s"
                 params.append(f"%{venue}%")
 
+            if min_price is not None:
+                query += " AND price >= %s"
+                params.append(min_price)
+
+            if max_price is not None:
+                query += " AND price <= %s"
+                params.append(max_price)
+
+            if team_name:
+                query += " AND (home_team ILIKE %s OR away_team ILIKE %s)"
+                params.append(f"%{team_name}%")
+                params.append(f"%{team_name}%")
+
+            if ticket_tier:
+                query += " AND ticket_tier ILIKE %s"
+                params.append(f"%{ticket_tier}%")
+
+            if start_date:
+                query += " AND match_date >= %s::timestamp"
+                params.append(start_date)
+
+            # Order the results by match date
             query += " ORDER BY match_date ASC;"
 
             cursor.execute(query, tuple(params))
@@ -93,9 +141,7 @@ def search_tickets(
                 item["match_date"] = item["match_date"].isoformat()
                 item["price"] = float(item["price"])
                 # Dynamically generate the title
-                item["title"] = (
-                    f"{item['home_team']} vs {item['away_team']}"
-                )
+                item["title"] = f"{item['home_team']} vs {item['away_team']}"
                 tickets_list.append(item)
 
             # 4. Store the result in Redis with a 60-second TTL
@@ -123,7 +169,7 @@ def search_tickets(
     response_model=TicketDetailResponse,
     status_code=status.HTTP_200_OK,
     summary=(
-        "Get specific ticket details with 3NF JOINs & COALESCE"
+        "Get ticket details with JOINs and COALESCE"
     ),
 )
 def get_ticket_details(ticket_id: int):
@@ -202,9 +248,7 @@ def get_ticket_details(ticket_id: int):
             item = dict(row)
             item["match_date"] = item["match_date"].isoformat()
             item["price"] = float(item["price"])
-            item["title"] = (
-                f"{item['home_team']} vs {item['away_team']}"
-            )
+            item["title"] = f"{item['home_team']} vs {item['away_team']}"
 
             return item
 
