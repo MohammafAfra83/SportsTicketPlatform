@@ -58,3 +58,13 @@ backend/.env
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Postman Workspace & Local Sync Files
+.postman/
+postman/collections/
+postman/documents/
+postman/environments/
+postman/flows/
+postman/globals/
+postman/mocks/
+postman/specs/
