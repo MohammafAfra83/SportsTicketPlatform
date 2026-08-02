@@ -6,19 +6,24 @@ class OTPRequest(BaseModel):
     phone_number: str = Field(
         ...,
         pattern=r"^09[0-9]{9}$",
-        description="Must be a valid 11-digit Iranian phone number "
-        "starting with 09",
+        examples=["09123456789"],
+        description=(
+            "Must be a valid 11-digit Iranian phone number "
+            "starting with 09"
+        ),
     )
 
 
 class UserSignup(BaseModel):
-    phone_number: str = Field(..., pattern=r"^09[0-9]{9}$")
-    email: EmailStr
-    password: str = Field(..., min_length=8)
-    otp_code: str = Field(..., min_length=5, max_length=5)
-    first_name: str = Field(..., min_length=2)
-    last_name: str = Field(..., min_length=2)
-    city: str = Field(..., min_length=2)
+    phone_number: str = Field(
+        ..., pattern=r"^09[0-9]{9}$", examples=["09123456789"]
+    )
+    email: EmailStr = Field(..., examples=["test@example.com"])
+    password: str = Field(..., min_length=8, examples=["StrongPassword123!"])
+    otp_code: str = Field(..., min_length=5, max_length=5, examples=["12345"])
+    first_name: str = Field(..., min_length=2, examples=["Ali"])
+    last_name: str = Field(..., min_length=2, examples=["Rezaei"])
+    city: str = Field(..., min_length=2, examples=["Tehran"])
 
 
 class UserLogin(BaseModel):
