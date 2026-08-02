@@ -1,23 +1,28 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # --- Input Models (Request) ---
 class OTPRequest(BaseModel):
-    phone_number: str
+    phone_number: str = Field(
+        ...,
+        pattern=r"^09[0-9]{9}$",
+        description="Must be a valid 11-digit Iranian phone number "
+        "starting with 09",
+    )
 
 
 class UserSignup(BaseModel):
-    phone_number: str
+    phone_number: str = Field(..., pattern=r"^09[0-9]{9}$")
     email: EmailStr
-    password: str
-    otp_code: str
-    first_name: str
-    last_name: str
-    city: str
+    password: str = Field(..., min_length=8)
+    otp_code: str = Field(..., min_length=5, max_length=5)
+    first_name: str = Field(..., min_length=2)
+    last_name: str = Field(..., min_length=2)
+    city: str = Field(..., min_length=2)
 
 
 class UserLogin(BaseModel):
-    phone_number: str
+    phone_number: str = Field(..., pattern=r"^09[0-9]{9}$")
     password: str
 
 
