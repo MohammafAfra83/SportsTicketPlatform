@@ -45,4 +45,4 @@ class CancellationPenaltyResponse(BaseModel):
 
 
 class CancelTicketRequest(BaseModel):
-    reservation_id: int = Field(..., gt=0)
+    reservation_id: int = Field(..., gt=0, examples=[101])
