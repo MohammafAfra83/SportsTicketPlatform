@@ -1,12 +1,16 @@
+from narwhals import Field
 from pydantic import BaseModel
 from datetime import datetime
 
 
 class ReportCreate(BaseModel):
-    category: str
-    report_text: str
-    ticket_id: int | None = None
-    reservation_id: int | None = None
+    category: str = Field(..., examples=["Payment Issue"])
+    report_text: str = Field(
+        ...,
+        examples=["Money deducted but reservation failed."],
+    )
+    ticket_id: int | None = Field(default=None, examples=[10])
+    reservation_id: int | None = Field(default=None, examples=[101])
 
 
 class ReportResponse(BaseModel):
