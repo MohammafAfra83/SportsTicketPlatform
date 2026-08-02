@@ -55,8 +55,16 @@ def search_tickets(
 
     try:
         with get_db_cursor() as cursor:
-            query = "SELECT * FROM tickets WHERE is_active = TRUE"
+            query = """
+                SELECT
+                    ticket_id, sport_type, home_team, away_team,
+                    venue_name, city, ticket_tier, organizer,
+                    match_date, price, remaining_capacity, is_active
+                FROM tickets
+                WHERE is_active = TRUE
+            """
             params = []
+
             if sport_type:
                 query += " AND sport_type = %s"
                 params.append(sport_type)
