@@ -3,10 +3,11 @@ from datetime import datetime
 
 
 class PaymentRequest(BaseModel):
-    reservation_id: int = Field(..., gt=0)
+    reservation_id: int = Field(..., gt=0, examples=[101])
     payment_method: str = Field(
         ...,
         min_length=1,
+        examples=["credit_card"],
         description="Payment method used (e.g., credit_card)",
     )
 
