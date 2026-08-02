@@ -32,34 +32,40 @@ query_results.csv
 # 4. Security & Environment
 # ==========================================
 .env
-.env.local
-.env.development
-.env.test
-.env.production
+.env.*
 *.pem
 *.key
 
 # ==========================================
-# 5. Future Phases: Docker Volumes & Caches
+# 5. Docker Volumes & Caches
 # ==========================================
 docker-data/
 pg_data/
+postgres_data/  
 redis_data/
 es_data/
-__pycache__/
-venv/
-node_modules/
-dist/
-build/
 
-# Python
+# ==========================================
+# 6. Python & Backend
+# ==========================================
+venv/
+.venv/          
+env/
 backend/venv/
-backend/.env
 __pycache__/
 *.pyc
 .pytest_cache/
 
-# Postman Workspace & Local Sync Files
+# ==========================================
+# 7. Node & Frontend (Future Phases)
+# ==========================================
+node_modules/
+dist/
+build/
+
+# ==========================================
+# 8. Postman Workspace & Local Sync Files
+# ==========================================
 .postman/
 postman/collections/
 postman/documents/
@@ -68,3 +74,4 @@ postman/flows/
 postman/globals/
 postman/mocks/
 postman/specs/
+*.postman_collection.json
