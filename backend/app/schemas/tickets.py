@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 
@@ -45,4 +45,4 @@ class CancellationPenaltyResponse(BaseModel):
 
 
 class CancelTicketRequest(BaseModel):
-    reservation_id: int
+    reservation_id: int = Field(..., gt=0)
