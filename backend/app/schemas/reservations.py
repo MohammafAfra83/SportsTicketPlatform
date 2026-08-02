@@ -4,7 +4,7 @@ from datetime import datetime
 
 class ReservationRequest(BaseModel):
     ticket_id: int = Field(
-        ..., gt=0, description="The ID of the ticket to reserve"
+        ..., gt=0, examples=[10], description="The ID of the ticket to reserve"
     )
 
 
