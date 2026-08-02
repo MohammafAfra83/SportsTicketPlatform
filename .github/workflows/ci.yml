@@ -35,12 +35,25 @@ jobs:
       - name: 1. Start All Services via Docker Compose
         run: docker compose --env-file .env up -d --build
 
-      - name: 2. Wait for Services to Initialize (Smart Wait)
+      - name: 2. Wait for Services and DB Seed to Initialize (Robust Wait)
         run: |
-          echo "Waiting for Postgres to be ready..."
+          echo "Waiting for Postgres to accept connections..."
           for i in {1..30}; do
             docker exec sports_ticket_postgres pg_isready -U postgres -d sports_ticket_db && break
-            echo "Waiting for postgres..." && sleep 2
+            echo "Waiting for postgres connection..." && sleep 2
+          done
+
+          echo "Waiting for database seed data to be fully loaded (checking tickets table)..."
+          for i in {1..30}; do
+            # Attempt to count rows in the tickets table. 
+            # If the table doesn't exist, this fails silently and loops.
+            # If it exists and has > 0 rows, we break.
+            ROW_COUNT=$(docker exec sports_ticket_postgres psql -U postgres -d sports_ticket_db -t -c "SELECT COUNT(*) FROM tickets;" 2>/dev/null | tr -d ' ')
+            if [ "$ROW_COUNT" ] && [ "$ROW_COUNT" -gt 0 ]; then
+              echo "✅ Database seeded successfully! ($ROW_COUNT tickets found)"
+              break
+            fi
+            echo "Waiting for seed data..." && sleep 2
           done
 
           echo "Waiting for API container to complete startup..."
