@@ -12,9 +12,11 @@ class DashboardStatsResponse(BaseModel):
 
 class AdminManageRequest(BaseModel):
     # Restricted strictly to these three values
-    entity_type: Literal["ticket", "reservation", "report"]
-    entity_id: int = Field(..., gt=0)
-    new_status: str = Field(..., min_length=1)
+    entity_type: Literal["ticket", "reservation", "report"] = Field(
+        ..., examples=["report"]
+    )
+    entity_id: int = Field(..., gt=0, examples=[1])
+    new_status: str = Field(..., min_length=1, examples=["resolved"])
 
 
 class AdminReservationResponse(BaseModel):
