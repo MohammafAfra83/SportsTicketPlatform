@@ -15,6 +15,18 @@ class BookingResponse(BaseModel):
 
 
 class UserProfileUpdate(BaseModel):
-    first_name: str | None = Field(default=None, min_length=2)
-    last_name: str | None = Field(default=None, min_length=2)
-    city: str | None = Field(default=None, min_length=2)
+    first_name: str | None = Field(
+        default=None,
+        min_length=2,
+        examples=["Ali"],
+    )
+    last_name: str | None = Field(
+        default=None,
+        min_length=2,
+        examples=["Rezaei"],
+    )
+    city: str | None = Field(
+        default=None,
+        min_length=2,
+        examples=["Shiraz"],
+    )
