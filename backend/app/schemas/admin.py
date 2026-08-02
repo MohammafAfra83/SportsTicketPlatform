@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Literal
 from datetime import datetime
 
 
@@ -11,9 +11,10 @@ class DashboardStatsResponse(BaseModel):
 
 
 class AdminManageRequest(BaseModel):
-    entity_type: str  # "ticket", "reservation", or "report"
-    entity_id: int
-    new_status: str
+    # Restricted strictly to these three values
+    entity_type: Literal["ticket", "reservation", "report"]
+    entity_id: int = Field(..., gt=0)
+    new_status: str = Field(..., min_length=1)
 
 
 class AdminReservationResponse(BaseModel):
