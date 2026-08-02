@@ -6,23 +6,38 @@ router = APIRouter(prefix="/api", tags=["Locations & Venues"])
 
 @router.get(
     "/cities-venues",
+    response_model=dict,
     status_code=status.HTTP_200_OK,
-    summary=(
-        "Get unique list of cities and venues"
-    ),
+    summary="Get unique list of cities and venues",
 )
 def get_cities_and_venues():
     try:
         with get_db_cursor() as cursor:
-            # Query to fetch distinct cities and venue names from tickets table
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT DISTINCT city, venue_name
                 FROM tickets
                 WHERE match_date > NOW()
                 ORDER BY city, venue_name;
-            """)
-            return cursor.fetchall()
+                """
+            )
+            rows = cursor.fetchall()
 
+            # 👈 Converting raw data to the standard Postman format
+            cities = list(
+                set(row["city"] for row in rows if row["city"])  # type: ignore
+            )
+            venues = list(
+                set(
+                    row["venue_name"] for row in rows if row["venue_name"]
+                )
+            )
+
+            return {
+                "cities": sorted(cities),
+                "venues": sorted(venues),
+            }
     except Exception as e:
-        detail = f"Database error: {str(e)}"
-        raise HTTPException(status_code=500, detail=detail)
+        # keep line length under 79 characters for linters
+        detail_msg = f"Database error: {str(e)}"
+        raise HTTPException(status_code=500, detail=detail_msg)
