@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 
@@ -15,6 +15,6 @@ class BookingResponse(BaseModel):
 
 
 class UserProfileUpdate(BaseModel):
-    first_name: str | None = None
-    last_name: str | None = None
-    city: str | None = None
+    first_name: str | None = Field(default=None, min_length=2)
+    last_name: str | None = Field(default=None, min_length=2)
+    city: str | None = Field(default=None, min_length=2)
