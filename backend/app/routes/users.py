@@ -17,56 +17,42 @@ def get_user_bookings(user_id: int = Depends(get_current_user_id)):
     try:
         with get_db_cursor() as cursor:
             query = """
-                SELECT
-                    r.reservation_id,
-                    r.ticket_id,
-                    t.home_team,
-                    t.away_team,
-                    t.match_date,
-                    r.status AS reservation_status,
-                    p.status AS payment_status,
-                    p.amount AS amount_paid,
-                    r.reserved_at
+                SELECT r.reservation_id, r.ticket_id, t.home_team,
+                       t.away_team, t.match_date,
+                       r.status AS reservation_status,
+                       p.status AS payment_status,
+                       p.amount AS amount_paid,
+                       r.reserved_at
                 FROM reservations r
                 JOIN tickets t ON r.ticket_id = t.ticket_id
                 LEFT JOIN payments p ON r.reservation_id = p.reservation_id
-                WHERE r.user_id = %s
-                ORDER BY r.reserved_at DESC;
+                WHERE r.user_id = %s ORDER BY r.reserved_at DESC;
             """
             cursor.execute(query, (user_id,))
-            rows = cursor.fetchall()
-
-            bookings = []
-            for row in rows:
-                bookings.append(
-                    {
-                        "reservation_id": row["reservation_id"],
-                        "ticket_id": row["ticket_id"],
-                        "home_team": row["home_team"],
-                        "away_team": row["away_team"],
-                        "match_date": row["match_date"],
-                        "reservation_status": row["reservation_status"],
-                        "payment_status": row["payment_status"],
-                        "amount_paid": (
-                            float(row["amount_paid"])
-                            if row["amount_paid"]
-                            else None
-                        ),
-                        "reserved_at": row["reserved_at"],
-                    }
-                )
-
-            return bookings
-
+            return [
+                {
+                    "reservation_id": r["reservation_id"],
+                    "ticket_id": r["ticket_id"],
+                    "home_team": r["home_team"],
+                    "away_team": r["away_team"],
+                    "match_date": r["match_date"],
+                    "reservation_status": r["reservation_status"],
+                    "payment_status": r["payment_status"],
+                    "amount_paid": (
+                        float(r["amount_paid"]) if r["amount_paid"] else None
+                    ),
+                    "reserved_at": r["reserved_at"],
+                }
+                for r in cursor.fetchall()
+            ]
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {str(e)}",
-        )
+        detail = f"Database error: {e}"
+        raise HTTPException(status_code=500, detail=detail)
 
 
 @router.put(
     "/profile",
+    response_model=dict,
     status_code=status.HTTP_200_OK,
     summary="Update user profile and invalidate cache",
 )
@@ -76,10 +62,7 @@ def update_profile(
 ):
     try:
         with get_db_cursor() as cursor:
-            # Build an UPDATE query only for fields that are provided
-            updates = []
-            params = []
-
+            updates, params = [], []
             if data.first_name:
                 updates.append("first_name = %s")
                 params.append(data.first_name)
@@ -95,26 +78,17 @@ def update_profile(
                     status_code=400, detail="No data provided to update"
                 )
 
-            set_clause = ", ".join(updates)
-            query = (
-                "UPDATE users SET "
-                f"{set_clause} "
-                "WHERE user_id = %s"
-            )
             params.append(user_id)
-
-            cursor.execute(query, tuple(params))
+            cursor.execute(
+                "UPDATE users SET "
+                f"{', '.join(updates)} WHERE user_id = %s",
+                tuple(params),
+            )
             cursor.connection.commit()
-
-            # Dynamically invalidate the user profile cache
             invalidate_user_profile_cache(user_id)
-
             return {
                 "message": "Profile updated successfully. Cache invalidated."
             }
-
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {str(e)}",
-        )
+        detail = f"Database error: {e}"
+        raise HTTPException(status_code=500, detail=detail)
